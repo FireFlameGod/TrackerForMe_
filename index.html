@@ -24,7 +24,7 @@
 
         .container {
             width: 100%;
-            /* MEGNÖVELT SZÉLESSÉG */
+            /* FRISSÍTVE: MEGNÖVELT SZÉLESSÉG 1500px-re */
             max-width: 1500px; 
             background-color: #282828;
             padding: 20px;
@@ -243,8 +243,8 @@
     
     // --- BIZTONSÁGI KONFIGURÁCIÓ ---
     
-    // !!! VÁLTOZTASD MEG EZT EGY BIZTONSÁGOSABB KULCSRA !!!
-    const SECRET_ACCESS_KEY = "0013"; 
+    // !!! FRISSÍTVE: A titkos kulcs Base64-ben kódolva (baratok-2025) !!!
+    const ENCODED_ACCESS_KEY = "YmFyYXRvay0yMDI1"; 
     const ACCESS_KEY_LOCAL_STORAGE = "trackerAccessGranted";
 
     // Ez a KÖZÖS mappa neve a Firestore-ban.
@@ -264,6 +264,9 @@
     window.checkAccessKey = function() {
         const inputKey = document.getElementById('access-key-input').value.trim();
         const errorDiv = document.getElementById('login-error');
+
+        // A KULCS DEKÓDOLÁSA Base64-ből az összehasonlításhoz
+        const SECRET_ACCESS_KEY = atob(ENCODED_ACCESS_KEY);
 
         if (inputKey === SECRET_ACCESS_KEY) {
             localStorage.setItem(ACCESS_KEY_LOCAL_STORAGE, 'true');
