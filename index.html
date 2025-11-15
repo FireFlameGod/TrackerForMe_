@@ -582,8 +582,7 @@
             await updateDoc(doc(getMediaCollectionRef(), firestoreId), {
                 cim: newTitle
             });
-            // Az onSnapshot újrarendereli a listát, így csak a szerkesztő módot kapcsoljuk ki
-            // Itt most HAGYJUK, hogy az onSnapshot frissítse a listát. Ha a mentés sikeres, a toggleEditMode-ot már nem hívjuk meg.
+            // Itt HAGYJUK, hogy az onSnapshot újrarenderelje a listát, ami kikapcsolja az edit módot is.
             console.log("[DEBUG] 8. Mentés sikeres. Az onSnapshot fogja újrarenderelni.");
         } catch (e) {
             console.error("Hiba a cím frissítésekor: ", e);
@@ -643,6 +642,7 @@
             const currentItem = trackerList.find(item => item.firestoreId === firestoreId);
             if (currentItem) {
                 input.value = currentItem.cim;
+                display.textContent = currentItem.cim; // A megjelenített cím szövegének frissítése is.
             }
         }
     }
@@ -819,24 +819,15 @@
             saveButton.setAttribute('data-action', 'save-media'); // Delegált akció
             saveButton.setAttribute('data-id', item.firestoreId);
 
-            // Adunk neki egy debug onclick-et, ami jelzi, hogy meg lett-e nyomva
-            saveButton.onclick = () => { 
-                console.log(`[DEBUG BUTTON] Save button clicked for ${item.firestoreId}`);
-            };
-
-            // 5. Mégse gomb (Cancel)
+            // 5. Mégse gomb (Cancel) - MOST MÁR EZ IS DELEGÁCIÓS
             const cancelButton = document.createElement('button');
             cancelButton.textContent = '❌ Mégse'; 
             cancelButton.id = `cancel-btn-${item.firestoreId}`;
             cancelButton.className = 'title-action-btn cancel-button';
             cancelButton.style.display = 'none'; // Rejtve
             cancelButton.title = 'Szerkesztés megszakítása';
-            
-            // Itt meghagyjuk az inline onclick-et, mert a Mégse egy egyszerű UI váltás, nincs Firebase művelet
-            cancelButton.onclick = () => {
-                console.log(`[DEBUG BUTTON] Cancel button clicked for ${item.firestoreId}`);
-                toggleEditMode(item.firestoreId);
-            };
+            cancelButton.setAttribute('data-action', 'cancel-media'); // Delegált akció
+            cancelButton.setAttribute('data-id', item.firestoreId);
 
             titleContainer.appendChild(titleDisplay);
             titleContainer.appendChild(titleInput);
@@ -961,7 +952,12 @@
              saveNewTitle(firestoreId);
         }
 
-        // Mégse gomb továbbra is inline onclick-et használ, ami a toggleEditMode-ot hívja.
+        // 3. Mégse gomb - Delegált akció használata (ÚJ FIX)
+        if (target.matches('[data-action="cancel-media"]')) {
+             const firestoreId = target.getAttribute('data-id');
+             console.log(`[DEBUG DELEGATION] 10. DELEGATED CANCEL EVENT for: ${firestoreId}`); 
+             toggleEditMode(firestoreId);
+        }
     });
 
 
