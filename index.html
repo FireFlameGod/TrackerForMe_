@@ -147,6 +147,13 @@
             opacity: 0.8; 
             transform: none; 
         }
+        /* Külön Szerkesztés stílus, hogy jobban látható legyen */
+        .edit-button {
+             background-color: #007bff; /* Kék szín a szerkesztésre */
+             color: white;
+             font-size: 1em; /* Kicsit nagyobb betűméret */
+        }
+
 
         /* Külön Mentés és Mégse színek, amelyek jobban illeszkednek a téma színéhez */
         .save-button { background-color: #28a745; color: white; } 
@@ -564,12 +571,13 @@
 
     // CÍM SZERKESZTÉSE FIREBASE-BEN
     window.saveNewTitle = async function(firestoreId) {
-        console.log(`[DEBUG] saveNewTitle TRIGGERED for: ${firestoreId}`);
+        console.log(`[DEBUG] 6. saveNewTitle TRIGGERED for: ${firestoreId}`);
         const input = document.getElementById(`title-edit-${firestoreId}`);
         const newTitle = input ? input.value.trim() : null;
         
         if (!newTitle || newTitle === "") { 
-            console.log("A cím nem lehet üres. Visszaváltás display módra.");
+            console.log("[DEBUG] 7. Cím üres. Visszaváltás display módra.");
+            // Ha üres címmel ment, csak visszaállítjuk az eredeti címre és kikapcsoljuk az edit módot
             toggleEditMode(firestoreId); 
             return; 
         }
@@ -581,6 +589,7 @@
             });
             // Az onSnapshot újrarendereli a listát, így csak a szerkesztő módot kapcsoljuk ki
             toggleEditMode(firestoreId); 
+            console.log("[DEBUG] 8. Mentés sikeres. Vissza a display módba.");
         } catch (e) {
             console.error("Hiba a cím frissítésekor: ", e);
         }
@@ -747,7 +756,7 @@
         if (type === 'film') { maxInput.value = ''; }
     }
     
-    // Lista megjelenítése - FRISSÍTVE A CÍMSZERKESZTŐ GOMBOKKAL
+    // Lista megjelenítése - FRISSÍTVE A CÍMSZERKESZTŐ GOMBOKKAL ÉS DEBUG NAPPAL
     function renderLists() { 
         const nezendoUl = document.getElementById('nezendo-lista');
         const megnezveUl = document.getElementById('megnezve-lista');
@@ -788,17 +797,20 @@
             titleInput.style.display = 'none'; // Alapértelmezésben rejtve
             titleInput.onkeypress = (e) => { if(e.key === 'Enter') saveNewTitle(item.firestoreId); };
 
-            // 3. Szerkesztés gomb (Edit)
+            // 3. Szerkesztés gomb (Edit) - FRISSÍTVE A DEBUG LOGGAL ÉS LÁTHATÓBB SZÖVEGGEL
             const editButton = document.createElement('button');
-            editButton.textContent = '✏️'; 
+            editButton.textContent = '✏️ Szerk.'; // Láthatóbb szöveg
             editButton.id = `edit-btn-${item.firestoreId}`;
             editButton.className = 'title-action-btn edit-button';
             editButton.title = 'Cím szerkesztése';
-            editButton.onclick = () => toggleEditMode(item.firestoreId);
+            editButton.onclick = () => {
+                console.log(`[DEBUG] 0. RAW CLICK EVENT for ${item.firestoreId}`); // ALACSONY SZINTŰ DEBUG
+                toggleEditMode(item.firestoreId);
+            };
 
             // 4. Mentés gomb (Save)
             const saveButton = document.createElement('button');
-            saveButton.textContent = '✅'; 
+            saveButton.textContent = '✅ Mentés'; 
             saveButton.id = `save-btn-${item.firestoreId}`;
             saveButton.className = 'title-action-btn save-button';
             saveButton.style.display = 'none'; // Rejtve
@@ -807,7 +819,7 @@
 
             // 5. Mégse gomb (Cancel)
             const cancelButton = document.createElement('button');
-            cancelButton.textContent = '❌'; 
+            cancelButton.textContent = '❌ Mégse'; 
             cancelButton.id = `cancel-btn-${item.firestoreId}`;
             cancelButton.className = 'title-action-btn cancel-button';
             cancelButton.style.display = 'none'; // Rejtve
