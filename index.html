@@ -221,15 +221,15 @@
                 
                 <!-- AL-TABOK - Csak a média fül alatt láthatóak -->
                 <div id="media-sub-tabs" class="tabs sub-tabs" style="display: flex;">
-                    <button onclick="showSubTab('cdrama')" class="active-sub-tab" id="cdrama-sub-tab">🇨🇳 C-Drama</button>
+                    <button onclick="showSubTab('joint')" class="active-sub-tab" id="joint-sub-tab">🧑‍🤝‍🧑 Közös nézés</button>
+                    <button onclick="showSubTab('cdrama')" id="cdrama-sub-tab">🇨🇳 C-Drama</button>
                     <button onclick="showSubTab('kdrama')" id="kdrama-sub-tab">🇰🇷 K-Drama</button>
                     <button onclick="showSubTab('anime')" id="anime-sub-tab">🇯🇵 Anime</button>
                     <button onclick="showSubTab('donghua')" id="donghua-sub-tab">🎎 Donghua</button>
                     <button onclick="showSubTab('other')" id="other-sub-tab">🌍 Egyéb</button>
-                    <button onclick="showSubTab('joint')" id="joint-sub-tab">🧑‍🤝‍🧑 Közös nézés</button>
                 </div>
 
-                <h2 id="media-category-title">🇨🇳 C-Drama</h2>
+                <h2 id="media-category-title">🧑‍🤝‍🧑 Közös nézés</h2>
                 
                 <div class="input-area">
                     <input type="text" id="cim-input" placeholder="Cím...">
@@ -314,16 +314,16 @@
     const GAME_COLLECTION_NAME = 'games';
 
     // Kategória kezelés
-    let currentCategory = 'cdrama'; // Alapértelmezett alkategória
+    let currentCategory = 'joint'; // ÚJ ALAPÉRTELMEZETT
     const CATEGORY_MAP = {
+        'joint': '🧑‍🤝‍🧑 Közös nézés', // ÚJ HELYEN
         'cdrama': '🇨🇳 C-Drama',
         'kdrama': '🇰🇷 K-Drama',
         'anime': '🇯🇵 Anime',
         'donghua': '🎎 Donghua',
         'other': '🌍 Egyéb',
-        'joint': '🧑‍🤝‍🧑 Közös nézés', // ÚJ KATEGÓRIA
     };
-    const CATEGORIES = Object.keys(CATEGORY_MAP);
+    const CATEGORIES = Object.keys(CATEGORY_MAP); // Ezzel garantáljuk a sorrendet
 
     // === 1. HOZZÁFÉRÉS ÉS BELÉPTETÉS ===
 
@@ -402,7 +402,7 @@
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('app-content-container').style.display = 'block';
             
-            // Kezdeti megjelenítés a 'media' fülön és a 'cdrama' alkategórián
+            // Kezdeti megjelenítés a 'media' fülön és a 'joint' alkategórián
             showMainTab('media');
 
         } catch (error) {
@@ -422,7 +422,7 @@
             trackerList = snapshot.docs.map(doc => ({
                 firestoreId: doc.id,
                 // Biztosítjuk, hogy legyen alapértelmezett kategória, ha hiányzik a régi elemekről
-                category: doc.data().category || 'other', 
+                category: doc.data().category || 'joint', 
                 ...doc.data()
             }));
             renderLists(); // Frissítés az összes média fülön
