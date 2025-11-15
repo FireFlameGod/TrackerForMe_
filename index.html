@@ -226,6 +226,7 @@
                     <button onclick="showSubTab('anime')" id="anime-sub-tab">🇯🇵 Anime</button>
                     <button onclick="showSubTab('donghua')" id="donghua-sub-tab">🎎 Donghua</button>
                     <button onclick="showSubTab('other')" id="other-sub-tab">🌍 Egyéb</button>
+                    <button onclick="showSubTab('joint')" id="joint-sub-tab">🧑‍🤝‍🧑 Közös nézés</button>
                 </div>
 
                 <h2 id="media-category-title">🇨🇳 C-Drama</h2>
@@ -320,6 +321,7 @@
         'anime': '🇯🇵 Anime',
         'donghua': '🎎 Donghua',
         'other': '🌍 Egyéb',
+        'joint': '🧑‍🤝‍🧑 Közös nézés', // ÚJ KATEGÓRIA
     };
     const CATEGORIES = Object.keys(CATEGORY_MAP);
 
@@ -458,7 +460,7 @@
             watchedEpisodes: (tipus === 'sorozat' ? 0 : null),
             maxEpisodes: (tipus === 'sorozat' && maxEpizodInput ? parseInt(maxEpizodInput) : null),
             link: (linkInput || null),
-            category: currentCategory // ÚJ: Aktuális kategória hozzáadva
+            category: currentCategory // Aktuális kategória hozzáadva
         };
 
         try {
@@ -471,8 +473,6 @@
         document.getElementById('max-epizod-input').value = '';
         document.getElementById('link-input').value = '';
     }
-
-    // ... (deleteItem, changeEpisodeCount, updateStatus, addNewGame, updateGameStatus, deleteGameItem funkciók változatlanok) ...
 
     window.deleteItem = async function(firestoreId) {
         try {
