@@ -93,7 +93,7 @@
 
         .sub-tabs {
             margin-top: 10px;
-            padding-left: 20px; /* Behúzás, hogy jobban elkülönüljön */
+            padding-left: 20px; 
             border-bottom: 2px solid #3e3e3e;
             margin-bottom: 20px;
         }
@@ -132,24 +132,19 @@
         .episode-controls { display: flex; align-items: center; gap: 10px; margin-right: 15px; }
         .episode-controls button { background-color: #555; color: #f0f0f0; padding: 5px 10px; box-shadow: none; }
         
-        /* ÚJ, KISEBB GOMB STÍLUSOK A CÍMHEZ */
+        /* ÚJ, KISEBB GOMB STÍLUSOK A CÍMHEZ ÉS TÉMASZÍNEZÉS */
         .title-action-btn { 
             padding: 5px 10px; 
-            font-size: 0.9em; 
+            font-size: 0.9em; /* Kisebb betűméret */
             margin-left: 5px;
             box-shadow: none;
             transition: background-color 0.2s;
             border-radius: 4px;
+            background-color: var(--theme-color); /* Alap témaszín */
+            color: #1e1e1e; /* Sötét szöveg a témaszínen */
         }
-        /* Szerkesztés gomb alapértelmezett stílusa */
-        .edit-button {
-             background-color: #007bff; /* Kék szín a szerkesztésre */
-             color: white;
-             font-size: 1em; /* Kicsit nagyobb betűméret */
-        }
-
-
-        /* Külön Mentés és Mégse színek, amelyek jobban illeszkednek a téma színéhez */
+        
+        /* Külön Mentés és Mégse színek, amelyek kontrasztosak */
         .save-button { background-color: #28a745; color: white; } 
         .cancel-button { background-color: #6c757d; color: white; } 
 
@@ -177,7 +172,7 @@
             background-color: #333;
             max-width: 250px; 
             box-sizing: border-box;
-            display: none; /* Alapértelmezetten rejtve, a JS mutatja */
+            display: none; 
         }
 
         /* --- HALADÓ ADATOK STÍLUSA --- */
@@ -436,8 +431,6 @@
             const userCredential = await signInAnonymously(auth);
             const actualUserId = userCredential.user.uid;
             
-            console.log("Sikeres névtelen bejelentkezés. UID:", actualUserId);
-
             // Haladó információk frissítése
             document.getElementById('shared-id-info').querySelector('strong').textContent = SHARED_UID;
             document.getElementById('user-id-info').querySelector('strong').textContent = actualUserId;
@@ -495,7 +488,7 @@
         const maxEpizodInput = document.getElementById('max-epizod-input').value;
         const linkInput = document.getElementById('link-input').value.trim();
         
-        if (cim === "") { console.log("Cím megadása kötelező."); return; }
+        if (cim === "") { return; }
         
         // Hozzáadjuk az aktuális alkategóriát
         const newItem = {
@@ -566,13 +559,10 @@
 
     // CÍM SZERKESZTÉSE FIREBASE-BEN
     window.saveNewTitle = async function(firestoreId) {
-        console.log(`[DEBUG] 6. saveNewTitle TRIGGERED for: ${firestoreId}`);
         const input = document.getElementById(`title-edit-${firestoreId}`);
         const newTitle = input ? input.value.trim() : null;
         
         if (!newTitle || newTitle === "") { 
-            console.log("[DEBUG] 7. Cím üres. Visszaváltás display módra.");
-            // Ha üres címmel ment, csak visszaállítjuk az eredeti címre és kikapcsoljuk az edit módot
             toggleEditMode(firestoreId); 
             return; 
         }
@@ -583,7 +573,6 @@
                 cim: newTitle
             });
             // Itt HAGYJUK, hogy az onSnapshot újrarenderelje a listát, ami kikapcsolja az edit módot is.
-            console.log("[DEBUG] 8. Mentés sikeres. Az onSnapshot fogja újrarenderelni.");
         } catch (e) {
             console.error("Hiba a cím frissítésekor: ", e);
             // Hiba esetén is visszaváltunk a kijelző módba
@@ -591,32 +580,24 @@
         }
     }
     
-    // CÍM SZERKESZTÉSI MÓD VÁLTÁSA - FRISSÍTVE
+    // CÍM SZERKESZTÉSI MÓD VÁLTÁSA - KURZOR BEÁLLÍTÁSSAL
     window.toggleEditMode = function(firestoreId) {
-        console.log(`[DEBUG] 1. toggleEditMode TRIGGERED for: ${firestoreId}`);
         const display = document.getElementById(`title-display-${firestoreId}`);
         const input = document.getElementById(`title-edit-${firestoreId}`);
         const editBtn = document.getElementById(`edit-btn-${firestoreId}`);
         const saveBtn = document.getElementById(`save-btn-${firestoreId}`);
         const cancelBtn = document.getElementById(`cancel-btn-${firestoreId}`);
         
-        // Részletes ellenőrzés a hiányzó elemekre
+        // Ellenőrzés a hiányzó elemekre
         if (!display || !input || !editBtn || !saveBtn || !cancelBtn) {
-            console.error(`[DEBUG] 2. MISSING ELEMENTS for ${firestoreId}. 
-                Display: ${!!display}, 
-                Input: ${!!input}, 
-                EditBtn: ${!!editBtn}, 
-                SaveBtn: ${!!saveBtn}, 
-                CancelBtn: ${!!cancelBtn}`);
+            console.error(`Missing elements for ${firestoreId}.`);
             return; 
         } 
-        console.log("[DEBUG] 3. All elements found. Proceeding with toggle.");
 
-        // Megnézzük, hogy szerkesztési módban van-e (a megjelenített elem rejtve van-e)
+        // Megnézzük, hogy szerkesztési módban van-e
         const isEditing = display.style.display === 'none';
 
         if (!isEditing) {
-            console.log("[DEBUG] 4. Switching to EDIT mode.");
             // Szerkesztési mód bekapcsolása
             display.style.display = 'none';
             input.style.display = 'inline-block';
@@ -625,11 +606,11 @@
             saveBtn.style.display = 'inline-block';
             cancelBtn.style.display = 'inline-block';
             
-            // Fókusz az input mezőre
+            // Fókusz az input mezőre és a kurzor beállítása a szöveg végére
             input.focus();
-            input.select();
+            const len = input.value.length;
+            input.setSelectionRange(len, len); // Kurzor a szöveg végén lesz (NEM jelöl ki!)
         } else {
-            console.log("[DEBUG] 5. Switching to DISPLAY mode (Cancel/Post-Save).");
             // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
             display.style.display = 'inline-block';
             input.style.display = 'none';
@@ -638,11 +619,11 @@
             saveBtn.style.display = 'none';
             cancelBtn.style.display = 'none';
             
-            // Mégse esetén VAGY mentési hiba esetén visszaállítjuk az eredeti címet az input mezőben
+            // Mégse esetén visszaállítjuk az eredeti címet az input mezőben
             const currentItem = trackerList.find(item => item.firestoreId === firestoreId);
             if (currentItem) {
                 input.value = currentItem.cim;
-                display.textContent = currentItem.cim; // A megjelenített cím szövegének frissítése is.
+                display.textContent = currentItem.cim; 
             }
         }
     }
@@ -653,7 +634,7 @@
         const cim = document.getElementById('game-cim-input').value.trim();
         const platform = document.getElementById('game-platform-select').value;
         
-        if (cim === "") { console.log("Játék cím megadása kötelező."); return; }
+        if (cim === "") { return; }
 
         const newItem = {
             cim: cim,
@@ -753,7 +734,7 @@
         if (type === 'film') { maxInput.value = ''; }
     }
     
-    // Lista megjelenítése - FRISSÍTVE A CÍMSZERKESZTŐ GOMBOKKAL ÉS DEBUG NAPPAL
+    // Lista megjelenítése
     function renderLists() { 
         const nezendoUl = document.getElementById('nezendo-lista');
         const megnezveUl = document.getElementById('megnezve-lista');
@@ -781,8 +762,8 @@
             const titleDisplay = document.createElement('strong');
             titleDisplay.id = `title-display-${item.firestoreId}`;
             titleDisplay.textContent = item.cim;
-            titleDisplay.style.display = 'inline-block'; // Explicit beállítás
-            titleDisplay.style.marginRight = '5px'; // Kis térköz
+            titleDisplay.style.display = 'inline-block'; 
+            titleDisplay.style.marginRight = '5px'; 
             
 
             // 2. Szerkeszthető input mező
@@ -791,7 +772,7 @@
             titleInput.id = `title-edit-${item.firestoreId}`;
             titleInput.value = item.cim;
             titleInput.className = 'title-edit-input';
-            titleInput.style.display = 'none'; // Alapértelmezésben rejtve (a CSS-ben is szerepel, de így biztosabb)
+            titleInput.style.display = 'none'; 
             titleInput.onkeypress = (e) => { 
                 if(e.key === 'Enter') {
                     // Mentés Enter lenyomásakor
@@ -814,19 +795,18 @@
             saveButton.textContent = '✅ Mentés'; 
             saveButton.id = `save-btn-${item.firestoreId}`;
             saveButton.className = 'title-action-btn save-button';
-            saveButton.style.display = 'none'; // Rejtve
+            saveButton.style.display = 'none'; 
             saveButton.title = 'Cím mentése';
-            saveButton.setAttribute('data-action', 'save-media'); // Delegált akció
-            saveButton.setAttribute('data-id', item.firestoreId);
+            saveButton.setAttribute('data-action', 'save-media'); 
 
-            // 5. Mégse gomb (Cancel) - MOST MÁR EZ IS DELEGÁCIÓS
+            // 5. Mégse gomb (Cancel)
             const cancelButton = document.createElement('button');
             cancelButton.textContent = '❌ Mégse'; 
             cancelButton.id = `cancel-btn-${item.firestoreId}`;
             cancelButton.className = 'title-action-btn cancel-button';
-            cancelButton.style.display = 'none'; // Rejtve
+            cancelButton.style.display = 'none'; 
             cancelButton.title = 'Szerkesztés megszakítása';
-            cancelButton.setAttribute('data-action', 'cancel-media'); // Delegált akció
+            cancelButton.setAttribute('data-action', 'cancel-media'); 
             cancelButton.setAttribute('data-id', item.firestoreId);
 
             titleContainer.appendChild(titleDisplay);
@@ -941,21 +921,18 @@
         // 1. Cím szerkesztésének aktiválása
         if (target.matches('[data-action="edit-media"]')) {
             const firestoreId = target.getAttribute('data-id');
-            console.log(`[DEBUG DELEGATION] 0. DELEGATED CLICK EVENT for: ${firestoreId}`); 
             toggleEditMode(firestoreId);
         }
         
         // 2. Mentés gomb - Delegált akció használata
         if (target.matches('[data-action="save-media"]')) {
              const firestoreId = target.getAttribute('data-id');
-             console.log(`[DEBUG DELEGATION] 9. DELEGATED SAVE EVENT for: ${firestoreId}`); 
              saveNewTitle(firestoreId);
         }
 
-        // 3. Mégse gomb - Delegált akció használata (ÚJ FIX)
+        // 3. Mégse gomb - Delegált akció használata
         if (target.matches('[data-action="cancel-media"]')) {
              const firestoreId = target.getAttribute('data-id');
-             console.log(`[DEBUG DELEGATION] 10. DELEGATED CANCEL EVENT for: ${firestoreId}`); 
              toggleEditMode(firestoreId);
         }
     });
