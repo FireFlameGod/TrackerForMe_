@@ -139,15 +139,9 @@
             margin-left: 5px;
             box-shadow: none;
             transition: background-color 0.2s;
-            background-color: var(--theme-color); 
-            color: #1e1e1e;
             border-radius: 4px;
         }
-        .title-action-btn:hover { 
-            opacity: 0.8; 
-            transform: none; 
-        }
-        /* Külön Szerkesztés stílus, hogy jobban látható legyen */
+        /* Szerkesztés gomb alapértelmezett stílusa */
         .edit-button {
              background-color: #007bff; /* Kék szín a szerkesztésre */
              color: white;
@@ -183,6 +177,7 @@
             background-color: #333;
             max-width: 250px; 
             box-sizing: border-box;
+            display: none; /* Alapértelmezetten rejtve, a JS mutatja */
         }
 
         /* --- HALADÓ ADATOK STÍLUSA --- */
@@ -595,7 +590,7 @@
         }
     }
     
-    // CÍM SZERKESZTÉSI MÓD VÁLTÁSA - FRISSÍTVE A DEBUG LOGOKKAL
+    // CÍM SZERKESZTÉSI MÓD VÁLTÁSA - FRISSÍTVE
     window.toggleEditMode = function(firestoreId) {
         console.log(`[DEBUG] 1. toggleEditMode TRIGGERED for: ${firestoreId}`);
         const display = document.getElementById(`title-display-${firestoreId}`);
@@ -785,7 +780,7 @@
             titleDisplay.id = `title-display-${item.firestoreId}`;
             titleDisplay.textContent = item.cim;
             titleDisplay.style.display = 'inline-block'; // Explicit beállítás
-            titleDisplay.style.marginRight = '5px'; // Kis térköz, hogy a gombok ne legyenek rátapadva
+            titleDisplay.style.marginRight = '5px'; // Kis térköz
             
 
             // 2. Szerkeszthető input mező
@@ -794,29 +789,33 @@
             titleInput.id = `title-edit-${item.firestoreId}`;
             titleInput.value = item.cim;
             titleInput.className = 'title-edit-input';
-            titleInput.style.display = 'none'; // Alapértelmezésben rejtve
-            titleInput.onkeypress = (e) => { if(e.key === 'Enter') saveNewTitle(item.firestoreId); };
+            titleInput.style.display = 'none'; // Alapértelmezésben rejtve (a CSS-ben is szerepel, de így biztosabb)
+            titleInput.onkeypress = (e) => { 
+                if(e.key === 'Enter') {
+                     // Delegációt használunk: a gombra kattintunk, de ha a user entert nyom, mentjük
+                    saveNewTitle(item.firestoreId);
+                } 
+            };
 
-            // 3. Szerkesztés gomb (Edit) - FRISSÍTVE AZ ESZEMÉNY DELEGÁCIÓHOZ
+            // 3. Szerkesztés gomb (Edit) - DELEGÁCIÓS GOMB
             const editButton = document.createElement('button');
             editButton.textContent = '✏️ Szerk.';
             editButton.id = `edit-btn-${item.firestoreId}`;
             editButton.className = 'title-action-btn edit-button';
             editButton.title = 'Cím szerkesztése';
-            // Esemény delegációhoz szükséges attribútumok
             editButton.setAttribute('data-action', 'edit-media');
             editButton.setAttribute('data-id', item.firestoreId);
-            // TÖRLÖLVE: Nincs inline onclick!
 
 
-            // 4. Mentés gomb (Save)
+            // 4. Mentés gomb (Save) - VISSZATÉRVE AZ INLINE ONCLICK-HEZ, HOGY PONTOSAN MŰKÖDJÖN
             const saveButton = document.createElement('button');
             saveButton.textContent = '✅ Mentés'; 
             saveButton.id = `save-btn-${item.firestoreId}`;
             saveButton.className = 'title-action-btn save-button';
             saveButton.style.display = 'none'; // Rejtve
             saveButton.title = 'Cím mentése';
-            saveButton.onclick = () => saveNewTitle(item.firestoreId);
+            // Visszaállítottuk az inline onclick-et, mert a delegációt csak a toggle-re használjuk
+            saveButton.onclick = () => saveNewTitle(item.firestoreId); 
 
             // 5. Mégse gomb (Cancel)
             const cancelButton = document.createElement('button');
@@ -831,7 +830,7 @@
             titleContainer.appendChild(titleInput);
             titleContainer.appendChild(editButton);
             titleContainer.appendChild(saveButton);
-            titleContainer.appendChild(cancelButton); // Mind az 3 gomb bekerül a titleContainer-be
+            titleContainer.appendChild(cancelButton); 
 
             
             itemDetails.appendChild(titleContainer);
@@ -932,18 +931,24 @@
         });
     }
     
-    // === ESZEMÉNY DELEGÁCIÓ A DINAMIKUS GOMBOKHOZ (Javítva a kattintási hibát) ===
+    // === ESZEMÉNY DELEGÁCIÓ A DINAMIKUS GOMBOKHOZ ===
     document.addEventListener('click', function(event) {
         const target = event.target;
         
-        // Ellenőrizzük, hogy a kattintás a 'edit-media' adatattribútummal rendelkező gombon történt-e
+        // Cím szerkesztésének aktiválása
         if (target.matches('[data-action="edit-media"]')) {
             const firestoreId = target.getAttribute('data-id');
-            // Alacsony szintű debug, ami biztosan lefut, ha a kattintás megtörtént
             console.log(`[DEBUG DELEGATION] 0. DELEGATED CLICK EVENT for: ${firestoreId}`); 
             toggleEditMode(firestoreId);
         }
-        // Itt lehetne kezelni más delegált eseményeket is, pl. játékok szerkesztését.
+        
+        // A mentés gombot az inline onclick kezeli, de ha nem működik, ez a fallback (bár a Mentés gomb most már inline onclick-et használ)
+        /*
+        if (target.matches('[data-action="save-media"]')) {
+             const firestoreId = target.getAttribute('data-id');
+             saveNewTitle(firestoreId);
+        }
+        */
     });
 
 
