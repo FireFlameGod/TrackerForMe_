@@ -583,10 +583,12 @@
                 cim: newTitle
             });
             // Az onSnapshot újrarendereli a listát, így csak a szerkesztő módot kapcsoljuk ki
-            toggleEditMode(firestoreId); 
-            console.log("[DEBUG] 8. Mentés sikeres. Vissza a display módba.");
+            // Itt most HAGYJUK, hogy az onSnapshot frissítse a listát. Ha a mentés sikeres, a toggleEditMode-ot már nem hívjuk meg.
+            console.log("[DEBUG] 8. Mentés sikeres. Az onSnapshot fogja újrarenderelni.");
         } catch (e) {
             console.error("Hiba a cím frissítésekor: ", e);
+            // Hiba esetén is visszaváltunk a kijelző módba
+            toggleEditMode(firestoreId);
         }
     }
     
@@ -628,7 +630,7 @@
             input.focus();
             input.select();
         } else {
-            console.log("[DEBUG] 5. Switching to DISPLAY mode.");
+            console.log("[DEBUG] 5. Switching to DISPLAY mode (Cancel/Post-Save).");
             // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
             display.style.display = 'inline-block';
             input.style.display = 'none';
@@ -637,7 +639,7 @@
             saveBtn.style.display = 'none';
             cancelBtn.style.display = 'none';
             
-            // Mégse esetén visszaállítjuk az eredeti címet az input mezőben
+            // Mégse esetén VAGY mentési hiba esetén visszaállítjuk az eredeti címet az input mezőben
             const currentItem = trackerList.find(item => item.firestoreId === firestoreId);
             if (currentItem) {
                 input.value = currentItem.cim;
@@ -792,7 +794,7 @@
             titleInput.style.display = 'none'; // Alapértelmezésben rejtve (a CSS-ben is szerepel, de így biztosabb)
             titleInput.onkeypress = (e) => { 
                 if(e.key === 'Enter') {
-                     // Delegációt használunk: a gombra kattintunk, de ha a user entert nyom, mentjük
+                    // Mentés Enter lenyomásakor
                     saveNewTitle(item.firestoreId);
                 } 
             };
@@ -807,15 +809,20 @@
             editButton.setAttribute('data-id', item.firestoreId);
 
 
-            // 4. Mentés gomb (Save) - VISSZATÉRVE AZ INLINE ONCLICK-HEZ, HOGY PONTOSAN MŰKÖDJÖN
+            // 4. Mentés gomb (Save) - DELEGÁCIÓS GOMB
             const saveButton = document.createElement('button');
             saveButton.textContent = '✅ Mentés'; 
             saveButton.id = `save-btn-${item.firestoreId}`;
             saveButton.className = 'title-action-btn save-button';
             saveButton.style.display = 'none'; // Rejtve
             saveButton.title = 'Cím mentése';
-            // Visszaállítottuk az inline onclick-et, mert a delegációt csak a toggle-re használjuk
-            saveButton.onclick = () => saveNewTitle(item.firestoreId); 
+            saveButton.setAttribute('data-action', 'save-media'); // Delegált akció
+            saveButton.setAttribute('data-id', item.firestoreId);
+
+            // Adunk neki egy debug onclick-et, ami jelzi, hogy meg lett-e nyomva
+            saveButton.onclick = () => { 
+                console.log(`[DEBUG BUTTON] Save button clicked for ${item.firestoreId}`);
+            };
 
             // 5. Mégse gomb (Cancel)
             const cancelButton = document.createElement('button');
@@ -824,7 +831,12 @@
             cancelButton.className = 'title-action-btn cancel-button';
             cancelButton.style.display = 'none'; // Rejtve
             cancelButton.title = 'Szerkesztés megszakítása';
-            cancelButton.onclick = () => toggleEditMode(item.firestoreId);
+            
+            // Itt meghagyjuk az inline onclick-et, mert a Mégse egy egyszerű UI váltás, nincs Firebase művelet
+            cancelButton.onclick = () => {
+                console.log(`[DEBUG BUTTON] Cancel button clicked for ${item.firestoreId}`);
+                toggleEditMode(item.firestoreId);
+            };
 
             titleContainer.appendChild(titleDisplay);
             titleContainer.appendChild(titleInput);
@@ -935,20 +947,21 @@
     document.addEventListener('click', function(event) {
         const target = event.target;
         
-        // Cím szerkesztésének aktiválása
+        // 1. Cím szerkesztésének aktiválása
         if (target.matches('[data-action="edit-media"]')) {
             const firestoreId = target.getAttribute('data-id');
             console.log(`[DEBUG DELEGATION] 0. DELEGATED CLICK EVENT for: ${firestoreId}`); 
             toggleEditMode(firestoreId);
         }
         
-        // A mentés gombot az inline onclick kezeli, de ha nem működik, ez a fallback (bár a Mentés gomb most már inline onclick-et használ)
-        /*
+        // 2. Mentés gomb - Delegált akció használata
         if (target.matches('[data-action="save-media"]')) {
              const firestoreId = target.getAttribute('data-id');
+             console.log(`[DEBUG DELEGATION] 9. DELEGATED SAVE EVENT for: ${firestoreId}`); 
              saveNewTitle(firestoreId);
         }
-        */
+
+        // Mégse gomb továbbra is inline onclick-et használ, ami a toggleEditMode-ot hívja.
     });
 
 
