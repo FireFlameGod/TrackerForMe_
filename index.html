@@ -143,7 +143,7 @@
         }
         .episode-controls button { background-color: #555; color: #f0f0f0; padding: 5px 10px; box-shadow: none; }
         
-        /* Fő szerkesztő gomb (Edit, Mentés, Mégse, Törlés) stílusa - MINDEN TELJES SZÉLESSÉGBEN */
+        /* Fő szerkesztő gomb (Edit, Mentés, Mégse) stílusa */
         .title-action-btn { 
             font-size: 1em; 
             padding: 10px 15px; 
@@ -152,7 +152,7 @@
             border-radius: 6px;
             background-color: var(--theme-color); 
             color: #1e1e1e; 
-            width: 100%; /* Ez a kulcs a szélességhez */
+            width: 120px; /* Fix szélesség, a Törlés gombhoz igazítva */
             margin-top: 5px; 
             text-align: center;
         }
@@ -161,10 +161,12 @@
         .save-button { background-color: #28a745; color: white; } 
         .cancel-button { background-color: #6c757d; color: white; } 
 
-        /* Törlés gomb stílusa, hogy a title-action-btn mellett piros is legyen */
-        .delete-button-full-width { 
-            background-color: #dc3545 !important; 
-            color: white !important; 
+        /* Törlés gomb stílusa, amihez a többinek igazodnia kell */
+        .delete-button-matched { 
+            background-color: #dc3545; 
+            color: white; 
+            width: 120px; /* Megfelelő szélesség a title-action-btn-hez */
+            margin-left: 10px; 
         }
 
         /* Vezérlők konténere */
@@ -174,13 +176,13 @@
             flex-wrap: wrap; 
             gap: 10px; 
             margin-top: 5px;
-            flex-direction: column; /* Stackelés */
+            flex-direction: column; /* Stackelés, hogy az Edit gomb a Törlés gomb alatt jelenjen meg */
             align-items: flex-end; 
             gap: 5px;
             min-width: 170px; 
         }
 
-        /* Hogy a Statusz és Epizód vezérlő egy sorban maradjon */
+        /* Hogy a Statusz, Törlés és Epizód vezérlő egy sorban maradjon */
         .item-controls .controls-row {
             display: flex;
             align-items: center;
@@ -638,7 +640,6 @@
         if (!firestoreId || !titleInput) { return; }
 
         if (!newTitle || newTitle === "") { 
-            // Ha üres címmel próbál menteni, maradhat szerkesztési módban, vagy visszaállhat
             toggleEditMode(firestoreId); 
             return; 
         }
@@ -688,7 +689,7 @@
         const editBtn = document.getElementById(`edit-btn-${firestoreId}`);
         const saveBtn = document.getElementById(`save-btn-${firestoreId}`);
         const cancelBtn = document.getElementById(`cancel-btn-${firestoreId}`);
-        // Törlés gomb (nem rejtjük el)
+        // Törlés gomb
         const deleteBtn = document.getElementById(`delete-btn-${firestoreId}`); 
         
         if (!titleDisplay || !titleInput || !editBtn || !saveBtn || !cancelBtn) { return; } 
@@ -721,7 +722,7 @@
             editBtn.style.display = 'none';
             saveBtn.style.display = 'block'; 
             cancelBtn.style.display = 'block'; 
-            if (deleteBtn) deleteBtn.style.display = 'none'; // Elrejtjük a törlés gombot, amíg szerkesztünk
+            if (deleteBtn) deleteBtn.style.display = 'none'; // Elrejtjük a törlés gombot
             
             titleInput.focus();
             const len = titleInput.value.length;
@@ -938,7 +939,7 @@
             const controls = document.createElement('div');
             controls.className = 'item-controls';
             
-            // Hozzáadunk egy sort az epizód és státusz gomboknak
+            // Hozzáadunk egy sort az epizód, státusz és törlés gomboknak
             const controlsRow = document.createElement('div');
             controlsRow.className = 'controls-row';
 
@@ -976,9 +977,17 @@
                 controlsRow.appendChild(button);
             }
             
+            // Törlés gomb (Vissza a sorba, a fix szélességű stílussal)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Törlés 🗑️';
+            deleteBtn.id = `delete-btn-${item.firestoreId}`;
+            deleteBtn.className = 'delete-button-matched'; 
+            deleteBtn.onclick = () => deleteItem(item.firestoreId);
+            controlsRow.appendChild(deleteBtn);
+
             controls.appendChild(controlsRow); // Hozzáadjuk a sort
 
-            // 4. Szerkesztő Gombok (Edit, Save, Cancel) - TELJES SZÉLESSÉGBEN STACKELVE
+            // 4. Szerkesztő Gombok (Edit, Save, Cancel) - FIX SZÉLESSÉGŰEN STACKELVE A SOR ALATT
 
             const editButton = document.createElement('button');
             editButton.textContent = 'Edit'; 
@@ -1008,14 +1017,6 @@
             cancelButton.setAttribute('data-action', 'cancel-media'); 
             cancelButton.setAttribute('data-id', item.firestoreId);
             controls.appendChild(cancelButton); 
-
-            // Törlés gomb (TELJES SZÉLESSÉGBEN, az edit gombokkal stackelve)
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Törlés 🗑️';
-            deleteBtn.id = `delete-btn-${item.firestoreId}`;
-            deleteBtn.className = 'title-action-btn delete-button-full-width'; 
-            deleteBtn.onclick = () => deleteItem(item.firestoreId);
-            controls.appendChild(deleteBtn);
             
             li.appendChild(controls);
 
@@ -1085,15 +1086,15 @@
                 button.onclick = () => updateGameStatus(item.firestoreId, 'játszandó');
                 controlsRow.appendChild(button);
             }
-            controls.appendChild(controlsRow);
             
-            // Törlés gomb (TELJES SZÉLESSÉGBEN, az edit gomb stílusával)
+            // Törlés gomb (vissza a sorba, a fix szélességű stílussal)
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Törlés 🗑️';
-            // Megkapja a teljes szélességű stílusokat
-            deleteBtn.className = 'title-action-btn delete-button-full-width'; 
+            deleteBtn.className = 'delete-button-matched'; 
             deleteBtn.onclick = () => deleteGameItem(item.firestoreId);
-            controls.appendChild(deleteBtn);
+            controlsRow.appendChild(deleteBtn);
+
+            controls.appendChild(controlsRow);
             
             li.appendChild(controls);
             
