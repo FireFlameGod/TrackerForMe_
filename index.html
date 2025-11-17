@@ -1,669 +1,231 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tracker</title>
-    <style>
-        :root { --theme-color:#ff8c00; }
-        body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#1e1e1e; color:#f0f0f0; }
-        .container { max-width:1500px; margin:0 auto; padding:20px; }
-        h1,h2,h3 { color:var(--theme-color); border-bottom:2px solid #333; padding-bottom:6px; margin:16px 0 10px; }
-        .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
-        .tabs button { background:#3e3e3e; color:#f0f0f0; border:none; border-radius:8px 8px 0 0; padding:10px 14px; font-weight:600; cursor:pointer; }
-        .tabs .active-main-tab { background:var(--theme-color); color:#1e1e1e; }
-        .sub-tabs { border-bottom:2px solid #333; padding-bottom:8px; margin-bottom:16px; }
-        .sub-tabs button { border-radius:6px 6px 0 0; }
-        .sub-tabs .active-sub-tab { background:var(--theme-color); color:#1e1e1e; }
-        .input-area { display:flex; gap:10px; flex-wrap:wrap; background:#2f2f2f; padding:12px; border-radius:8px; margin-bottom:16px; }
-        .input-area input, .input-area select { flex:1; min-width:160px; padding:10px; border:1px solid #555; border-radius:6px; background:#3a3a3a; color:#f0f0f0; }
-        .input-area button { flex:0; min-width:150px; }
-        button { padding:10px 14px; border:none; border-radius:6px; background:var(--theme-color); color:#1e1e1e; font-weight:700; cursor:pointer; }
-        button:hover { opacity:0.92; }
-        .logout-btn { background:#555; color:#f0f0f0; }
-        .color-picker-area { display:flex; align-items:center; gap:10px; margin:10px 0 16px; }
-        .tracker-list { list-style:none; padding:0; margin:0; }
-        .tracker-item { background:#3f3f3f; border-left:5px solid var(--theme-color); border-radius:8px; padding:12px; margin:10px 0; display:flex; flex-direction:column; gap:8px; }
-        .tracker-item.watched { border-left-color:#28a745; opacity:0.92; }
-        .item-details { display:flex; flex-direction:column; gap:6px; }
-        .item-title-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-        .title-edit-input, .link-edit-input, .episodes-edit-input { display:none; padding:6px; border:1px solid var(--theme-color); border-radius:4px; background:#333; color:#f0f0f0; }
-        .item-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-        .save-button { background:#28a745; color:#fff; }
-        .cancel-button { background:#6c757d; color:#fff; }
-        .delete-button { background:#dc3545; color:#fff; }
-        .episode-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-        .notes-container { background:#2f2f2f; border-radius:6px; padding:10px; }
-        .notes-label { color:var(--theme-color); font-weight:700; }
-        .notes-textarea { display:none; width:100%; min-height:80px; padding:8px; border:1px solid #555; border-radius:6px; background:#333; color:#f0f0f0; }
-        .notes-controls { display:flex; gap:8px; margin-top:6px; }
-        #login-screen { position:fixed; inset:0; background:#1e1e1e; display:none; align-items:center; justify-content:center; z-index:1000; }
-        .login-box { background:#2b2b2b; padding:24px; border-radius:10px; width:90%; max-width:420px; box-shadow:0 8px 24px rgba(0,0,0,0.5); }
-        #access-key-input { width:100%; padding:12px; border:1px solid #555; border-radius:6px; background:#3a3a3a; color:#f0f0f0; margin-bottom:12px; text-align:center; font-size:1.05em; }
-        .login-button { width:100%; }
-        .error-message { color:#dc3545; font-weight:700; margin-top:8px; }
-        #advanced-info-toggle { background:#333; color:#f0f0f0; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:6px; }
-        #advanced-info-content { display:none; background:#2f2f2f; border-top:1px solid #444; border-radius:0 0 6px 6px; padding:10px 12px; color:#ccc; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Tracker</title>
+  <style>
+    :root { --theme-color:#ff8c00; }
+    body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#1e1e1e; color:#f0f0f0; padding:20px; display:flex; justify-content:center; }
+    .container { width:100%; max-width:1500px; background:#282828; padding:20px; border-radius:12px; box-shadow:0 10px 20px rgba(0,0,0,0.5); }
+    h1,h2,h3 { color:var(--theme-color); border-bottom:2px solid #3d3d3d; padding-bottom:5px; }
+    .tabs { display:flex; flex-wrap:wrap; margin-bottom:10px; }
+    .tabs button { background:#3e3e3e; color:#f0f0f0; margin-right:5px; margin-bottom:5px; padding:10px 15px; border:none; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; }
+    .tabs .active-main-tab { background:var(--theme-color); color:#1e1e1e; }
+    .sub-tabs { margin-top:10px; border-bottom:2px solid #3e3e3e; margin-bottom:20px; }
+    .sub-tabs button { border-radius:6px 6px 0 0; font-size:0.9em; padding:8px 12px; background:#4c4c4c; }
+    .sub-tabs .active-sub-tab { background:var(--theme-color); color:#1e1e1e; }
+    .input-area { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; background:#3e3e3e; padding:15px; border-radius:8px; }
+    .input-area input, .input-area select { flex:1; min-width:150px; padding:10px; border:1px solid #555; border-radius:6px; background:#3e3e3e; color:#f0f0f0; }
+    .tracker-list { list-style:none; padding:0; }
+    .tracker-item { background:#444; padding:15px; margin-bottom:10px; border-radius:8px; border-left:5px solid var(--theme-color); box-shadow:0 4px 6px rgba(0,0,0,0.4); }
+    .tracker-item.watched { border-left-color:#28a745; opacity:0.9; }
+    .item-details { display:flex; flex-direction:column; gap:6px; }
+    .item-title-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .title-edit-input,.link-edit-input,.episodes-edit-input { display:none; padding:6px; border:1px solid var(--theme-color); border-radius:4px; background:#333; color:#f0f0f0; }
+    .item-controls { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .save-button { background:#28a745; color:#fff; }
+    .cancel-button { background:#6c757d; color:#fff; }
+    .delete-button { background:#dc3545; color:#fff; }
+    .episode-controls { display:flex; gap:8px; flex-wrap:wrap; }
+    .notes-container { background:#3e3e3e; padding:10px; border-radius:6px; margin-top:10px; }
+    .notes-label { color:var(--theme-color); font-weight:bold; }
+    .notes-textarea { display:none; width:100%; min-height:80px; padding:8px; border:1px solid #555; border-radius:4px; background:#333; color:#f0f0f0; }
+    .notes-controls { display:flex; gap:8px; margin-top:6px; }
+  </style>
 </head>
 <body>
-    <div id="login-screen">
-        <div class="login-box">
-            <h2>🔐 Privát Tracker</h2>
-            <p>Add meg a közös titkos kulcsot:</p>
-            <input type="password" id="access-key-input" placeholder="Titkos Kulcs">
-            <button class="login-button" onclick="checkAccessKey()">Belépés</button>
-            <div id="login-error" class="error-message"></div>
-        </div>
+  <div class="container">
+    <h1>🎬 Tracker</h1>
+    <div class="tabs">
+      <button id="media-main-tab" class="active-main-tab" onclick="showMainTab('media')">🎬 Filmek & Sorozatok</button>
+      <button id="game-main-tab" onclick="showMainTab('game')">🎮 Játékok</button>
     </div>
-
-    <div id="main-app-content" style="display:none;">
-        <div class="container">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h1>🎬 Tracker</h1>
-                <button class="logout-btn" onclick="logout()">Kijelentkezés 🚪</button>
-            </div>
-
-            <button id="advanced-info-toggle" onclick="toggleAdvancedInfo()">
-                <span>Haladó adatok (hibakeresés) ⚙️</span><span id="toggle-icon">▼</span>
-            </button>
-            <div id="advanced-info-content">
-                <p id="shared-id-info">Közös mappa ID: <strong></strong></p>
-                <p id="user-id-info">Azonosító (Anonim UID): <strong></strong></p>
-            </div>
-
-            <div class="color-picker-area">
-                <span>Kiemelő szín:</span>
-                <input type="color" id="color-picker" value="#ff8c00" onchange="changeThemeColor(this.value)">
-            </div>
-
-            <div class="tabs">
-                <button id="media-main-tab" class="active-main-tab" onclick="showMainTab('media')">🎬 Filmek & Sorozatok</button>
-                <button id="game-main-tab" onclick="showMainTab('game')">🎮 Játékok</button>
-            </div>
-
-            <div id="media-content">
-                <div id="media-sub-tabs" class="tabs sub-tabs">
-                    <button id="joint-sub-tab" class="active-sub-tab" onclick="showSubTab('joint')">🧑‍🤝‍🧑 Közös nézés</button>
-                    <button id="cdrama-sub-tab" onclick="showSubTab('cdrama')">🇨🇳 C-Drama</button>
-                    <button id="kdrama-sub-tab" onclick="showSubTab('kdrama')">🇰🇷 K-Drama</button>
-                    <button id="anime-sub-tab" onclick="showSubTab('anime')">🇯🇵 Anime</button>
-                    <button id="donghua-sub-tab" onclick="showSubTab('donghua')">🎎 Donghua</button>
-                    <button id="other-sub-tab" onclick="showSubTab('other')">🌍 Egyéb</button>
-                </div>
-
-                <h2 id="media-category-title">🧑‍🤝‍🧑 Közös nézés</h2>
-
-                <div class="input-area">
-                    <input type="text" id="cim-input" placeholder="Cím...">
-                    <select id="tipus-select" onchange="toggleMaxEpisodeInput()">
-                        <option value="film">Film</option>
-                        <option value="sorozat">Sorozat</option>
-                    </select>
-                    <input type="number" id="max-epizod-input" placeholder="Max epizód" style="display:none;">
-                    <input type="url" id="link-input" placeholder="Link (pl. IMDb)">
-                    <button onclick="addNewItem()">Hozzáadás</button>
-                </div>
-
-                <h3>Nézendő</h3>
-                <ul id="nezendo-lista" class="tracker-list"></ul>
-
-                <h3>Megnézve</h3>
-                <ul id="megnezve-lista" class="tracker-list"></ul>
-            </div>
-
-            <div id="game-tracker-content" style="display:none;">
-                <h2>🎮 Játékok</h2>
-                <div class="input-area">
-                    <input type="text" id="game-cim-input" placeholder="Játék címe...">
-                    <select id="game-platform-select">
-                        <option value="PC">PC</option>
-                        <option value="PlayStation">PlayStation</option>
-                        <option value="Xbox">Xbox</option>
-                        <option value="Switch">Switch</option>
-                        <option value="Mobil">Mobil</option>
-                    </select>
-                    <button onclick="addNewGame()">Hozzáadás</button>
-                </div>
-
-                <h3>Játszandó</h3>
-                <ul id="game-nezendo-lista" class="tracker-list"></ul>
-
-                <h3>Kijátszott</h3>
-                <ul id="game-megnezve-lista" class="tracker-list"></ul>
-            </div>
-        </div>
+    <div id="media-content">
+      <div class="tabs sub-tabs">
+        <button id="joint-sub-tab" class="active-sub-tab" onclick="showSubTab('joint')">🧑‍🤝‍🧑 Közös</button>
+        <button id="cdrama-sub-tab" onclick="showSubTab('cdrama')">🇨🇳 C-Drama</button>
+        <button id="kdrama-sub-tab" onclick="showSubTab('kdrama')">🇰🇷 K-Drama</button>
+        <button id="anime-sub-tab" onclick="showSubTab('anime')">🇯🇵 Anime</button>
+        <button id="donghua-sub-tab" onclick="showSubTab('donghua')">🎎 Donghua</button>
+        <button id="other-sub-tab" onclick="showSubTab('other')">🌍 Egyéb</button>
+      </div>
+      <h2 id="media-category-title">🧑‍🤝‍🧑 Közös</h2>
+      <div class="input-area">
+        <input type="text" id="cim-input" placeholder="Cím...">
+        <select id="tipus-select" onchange="toggleMaxEpisodeInput()">
+          <option value="film">Film</option>
+          <option value="sorozat">Sorozat</option>
+        </select>
+        <input type="number" id="max-epizod-input" placeholder="Max epizód" style="display:none;">
+        <input type="url" id="link-input" placeholder="Link (IMDb)">
+        <button onclick="addNewItem()">Hozzáadás</button>
+      </div>
+      <h3>Nézendő</h3>
+      <ul id="nezendo-lista" class="tracker-list"></ul>
+      <h3>Megnézve</h3>
+      <ul id="megnezve-lista" class="tracker-list"></ul>
     </div>
-
+    <div id="game-tracker-content" style="display:none;">
+      <h2>🎮 Játékok</h2>
+      <div class="input-area">
+        <input type="text" id="game-cim-input" placeholder="Játék címe...">
+        <select id="game-platform-select">
+          <option value="PC">PC</option>
+          <option value="PlayStation">PlayStation</option>
+          <option value="Xbox">Xbox</option>
+          <option value="Switch">Switch</option>
+          <option value="Mobil">Mobil</option>
+        </select>
+        <button onclick="addNewGame()">Hozzáadás</button>
+      </div>
+      <h3>Játszandó</h3>
+      <ul id="game-nezendo-lista" class="tracker-list"></ul>
+      <h3>Kijátszott</h3>
+      <ul id="game-megnezve-lista" class="tracker-list"></ul>
+    </div>
+  </div>
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyAKEKZzgKSTFQ3_K6Yhm7aPvTX5plMzXYg",
-        authDomain: "tracker-fbe21.firebaseapp.com",
-        projectId: "tracker-fbe21",
-        storageBucket: "tracker-fbe21.firebasestorage.app",
-        messagingSenderId: "402979419538",
-        appId: "1:402979419538:web:ff7924c73c306ff8527d4b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // Biztonság: titkos kulcs (Base64: "0013")
-    const ENCODED_ACCESS_KEY = "MDAxMw==";
-    const ACCESS_KEY_LOCAL_STORAGE = "trackerAccessGranted";
-
-    const SHARED_UID = "SHARED_FRIENDS_GROUP";
-    const MEDIA_COLLECTION_NAME = "media";
-    const GAME_COLLECTION_NAME = "games";
-
-    let trackerList = [];
-    let gameList = [];
-    let currentCategory = "joint";
-
-    const CATEGORY_MAP = {
-        joint: "🧑‍🤝‍🧑 Közös nézés",
-        cdrama: "🇨🇳 C-Drama",
-        kdrama: "🇰🇷 K-Drama",
-        anime: "🇯🇵 Anime",
-        donghua: "🎎 Donghua",
-        other: "🌍 Egyéb"
-    };
-
-    // Belépés
-    window.checkAccessKey = function() {
-        const inputKey = document.getElementById('access-key-input').value.trim();
-        const errorDiv = document.getElementById('login-error');
-        const SECRET_ACCESS_KEY = atob(ENCODED_ACCESS_KEY);
-
-        if (inputKey === SECRET_ACCESS_KEY) {
-            localStorage.setItem(ACCESS_KEY_LOCAL_STORAGE, 'true');
-            errorDiv.textContent = '';
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-app-content').style.display = 'block';
-            initAuthAndApp();
-        } else {
-            errorDiv.textContent = 'Hibás titkos kulcs!';
-            localStorage.removeItem(ACCESS_KEY_LOCAL_STORAGE);
-        }
-    }
-
-    function checkInitialAccess() {
-        if (localStorage.getItem(ACCESS_KEY_LOCAL_STORAGE) === 'true') {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-app-content').style.display = 'block';
-            initAuthAndApp();
-        } else {
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('main-app-content').style.display = 'none';
-        }
-    }
-
-    window.logout = function() {
-        localStorage.removeItem(ACCESS_KEY_LOCAL_STORAGE);
-        location.reload();
-    }
-
-    window.toggleAdvancedInfo = function() {
-        const c = document.getElementById('advanced-info-content');
-        const icon = document.getElementById('toggle-icon');
-        const isHidden = c.style.display === 'none' || c.style.display === '';
-        c.style.display = isHidden ? 'block' : 'none';
-        icon.textContent = isHidden ? '▲' : '▼';
-    }
-
-    async function initAuthAndApp() {
-        try {
-            const cred = await signInAnonymously(auth);
-            document.getElementById('shared-id-info').querySelector('strong').textContent = SHARED_UID;
-            document.getElementById('user-id-info').querySelector('strong').textContent = cred.user.uid;
-
-            loadThemeColor();
-            startFirestoreListeners();
-            showMainTab('media');
-        } catch (e) {
-            console.error("Auth hiba:", e);
-        }
-    }
-
-    function getMediaCollectionRef() {
-        return collection(db, 'users', SHARED_UID, MEDIA_COLLECTION_NAME);
-    }
-    function getGameCollectionRef() {
-        return collection(db, 'users', SHARED_UID, GAME_COLLECTION_NAME);
-    }
-
-    function startFirestoreListeners() {
-        onSnapshot(getMediaCollectionRef(), (snapshot) => {
-            trackerList = snapshot.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
-            renderLists();
-        }, (e) => console.error("Media figyelés hiba:", e));
-
-        onSnapshot(getGameCollectionRef(), (snapshot) => {
-            gameList = snapshot.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
-            renderGameLists();
-        }, (e) => console.error("Game figyelés hiba:", e));
-    }
-
-    window.addNewItem = async function() {
-        const cim = document.getElementById('cim-input').value.trim();
-        const tipus = document.getElementById('tipus-select').value;
-        const maxEp = document.getElementById('max-epizod-input').value;
-        const link = document.getElementById('link-input').value.trim();
-
-        if (!cim) return;
-
-        const newItem = {
-            cim,
-            tipus,
-            statusz: "nézendő",
-            watchedEpisodes: tipus === 'sorozat' ? 0 : null,
-            maxEpisodes: tipus === 'sorozat' && maxEp ? parseInt(maxEp,10) : null,
-            link: link || null,
-            category: currentCategory,
-            notes: ""
-        };
-
-        try { await addDoc(getMediaCollectionRef(), newItem); } catch(e) { console.error(e); }
-        document.getElementById('cim-input').value = '';
-        document.getElementById('max-epizod-input').value = '';
-        document.getElementById('link-input').value = '';
-    }
-
-    window.deleteItem = async function(firestoreId) {
-        try { await deleteDoc(doc(getMediaCollectionRef(), firestoreId)); } catch(e) { console.error(e); }
-    }
-
-    window.updateStatus = async function(firestoreId, newStatus) {
-        try { await updateDoc(doc(getMediaCollectionRef(), firestoreId), { statusz: newStatus }); } catch(e) { console.error(e); }
-    }
-
-    window.changeEpisodeCount = async function(firestoreId, delta) {
-        const item = trackerList.find(i => i.firestoreId === firestoreId);
-        if (!item || item.tipus !== 'sorozat') return;
-
-        let newCount = (item.watchedEpisodes ?? 0) + delta;
-        newCount = Math.max(0, newCount);
-        if (item.maxEpisodes) newCount = Math.min(newCount, item.maxEpisodes);
-
-        let newStatus = item.statusz;
-        if (item.maxEpisodes && newCount === item.maxEpisodes) newStatus = 'megnézve';
-        else if (newStatus === 'megnézve' && item.maxEpisodes && newCount < item.maxEpisodes) newStatus = 'nézendő';
-
-        try { await updateDoc(doc(getMediaCollectionRef(), firestoreId), { watchedEpisodes: newCount, statusz: newStatus }); } catch(e) { console.error(e); }
-    }
-
-    // Mentés: azonnal updateDoc, utána visszavált nézetre
-    window.saveItemDetails = async function(firestoreId) {
-        const titleInput = document.getElementById(`title-edit-${firestoreId}`);
-        const linkInput = document.getElementById(`link-edit-${firestoreId}`);
-        const episodesInput = document.getElementById(`episodes-edit-${firestoreId}`);
-
-        const updates = {};
-        if (titleInput) {
-            const newTitle = titleInput.value.trim();
-            if (newTitle) updates.cim = newTitle;
-        }
-        if (linkInput) {
-            const newLink = linkInput.value.trim();
-            updates.link = newLink || null;
-        }
-
-        let newMax = null;
-        if (episodesInput) {
-            const parsed = parseInt(episodesInput.value, 10);
-            if (!isNaN(parsed) && parsed >= 0) {
-                updates.maxEpisodes = parsed;
-                newMax = parsed;
-            } else {
-                updates.maxEpisodes = null;
-                newMax = null;
-            }
-        }
-
-        const item = trackerList.find(i => i.firestoreId === firestoreId);
-        if (item && item.tipus === 'sorozat' && episodesInput) {
-            const watched = item.watchedEpisodes ?? 0;
-            const limit = newMax ?? item.maxEpisodes ?? null;
-            if (limit !== null) {
-                const corrected = Math.min(watched, limit);
-                updates.watchedEpisodes = corrected;
-                updates.statusz = limit > 0 && corrected === limit ? 'megnézve' : 'nézendő';
-            } else {
-                updates.statusz = 'nézendő';
-            }
-        }
-
-        try {
-            await updateDoc(doc(getMediaCollectionRef(), firestoreId), updates);
-            toggleEditMode(firestoreId);
-        } catch (e) {
-            console.error("Mentési hiba:", e);
-        }
-    }
-
-    // Szerkesztési mód váltása
-    window.toggleEditMode = function(firestoreId) {
-        const titleDisplay = document.getElementById(`title-display-${firestoreId}`);
-        const titleInput = document.getElementById(`title-edit-${firestoreId}`);
-        const linkDisplay = document.getElementById(`link-display-${firestoreId}`);
-        const linkInput = document.getElementById(`link-edit-${firestoreId}`);
-        const episodesDisplay = document.getElementById(`episodes-display-${firestoreId}`);
-        const episodesInput = document.getElementById(`episodes-edit-${firestoreId}`);
-        const editBtn = document.getElementById(`edit-btn-${firestoreId}`);
-        const saveBtn = document.getElementById(`save-btn-${firestoreId}`);
-        const cancelBtn = document.getElementById(`cancel-btn-${firestoreId}`);
-
-        const isEditing = titleInput && titleInput.style.display !== 'none';
-
-        if (!isEditing) {
-            if (titleDisplay) titleDisplay.style.display = 'none';
-            if (titleInput) { titleInput.style.display = 'inline-block'; titleInput.focus(); }
-            if (linkDisplay) linkDisplay.style.display = 'none';
-            if (linkInput) linkInput.style.display = 'inline-block';
-            if (episodesDisplay) episodesDisplay.style.display = 'none';
-            if (episodesInput) episodesInput.style.display = 'inline-block';
-            if (editBtn) editBtn.style.display = 'none';
-            if (saveBtn) saveBtn.style.display = 'inline-block';
-            if (cancelBtn) cancelBtn.style.display = 'inline-block';
-        } else {
-            if (titleDisplay) titleDisplay.style.display = 'inline-block';
-            if (titleInput) titleInput.style.display = 'none';
-            if (linkDisplay) linkDisplay.style.display = 'inline-block';
-            if (linkInput) linkInput.style.display = 'none';
-            if (episodesDisplay) episodesDisplay.style.display = 'inline-block';
-            if (episodesInput) episodesInput.style.display = 'none';
-            if (editBtn) editBtn.style.display = 'inline-block';
-            if (saveBtn) saveBtn.style.display = 'none';
-            if (cancelBtn) cancelBtn.style.display = 'none';
-        }
-    }
-
-    // Megjegyzések
-    window.saveNotes = async function(firestoreId) {
-        const ta = document.getElementById(`notes-edit-${firestoreId}`);
-        if (!ta) return;
-        const newNotes = ta.value;
-
-        try { await updateDoc(doc(getMediaCollectionRef(), firestoreId), { notes: newNotes }); } catch(e) { console.error(e); }
-        toggleNotesEditMode(firestoreId);
-    }
-
-    window.toggleNotesEditMode = function(firestoreId) {
-        const display = document.getElementById(`notes-display-${firestoreId}`);
-        const textarea = document.getElementById(`notes-edit-${firestoreId}`);
-        const editBtn = document.getElementById(`notes-edit-btn-${firestoreId}`);
-        const saveBtn = document.getElementById(`notes-save-btn-${firestoreId}`);
-        const cancelBtn = document.getElementById(`notes-cancel-btn-${firestoreId}`);
-
-        const isEditing = textarea && textarea.style.display !== 'none';
-
-        if (!isEditing) {
-            if (display) display.style.display = 'none';
-            if (textarea) { textarea.style.display = 'block'; textarea.focus(); }
-            if (editBtn) editBtn.style.display = 'none';
-            if (saveBtn) saveBtn.style.display = 'inline-block';
-            if (cancelBtn) cancelBtn.style.display = 'inline-block';
-        } else {
-            if (display) display.style.display = 'block';
-            if (textarea) textarea.style.display = 'none';
-            if (editBtn) editBtn.style.display = 'inline-block';
-            if (saveBtn) saveBtn.style.display = 'none';
-            if (cancelBtn) cancelBtn.style.display = 'none';
-        }
-    }
-
-    // Játékok
-    window.addNewGame = async function() {
-        const cim = document.getElementById('game-cim-input').value.trim();
-        const platform = document.getElementById('game-platform-select').value;
-        if (!cim) return;
-
-        try { await addDoc(getGameCollectionRef(), { cim, platform, statusz: 'játszandó' }); } catch(e) { console.error(e); }
-        document.getElementById('game-cim-input').value = '';
-    }
-
-    window.updateGameStatus = async function(firestoreId, newStatus) {
-        try { await updateDoc(doc(getGameCollectionRef(), firestoreId), { statusz: newStatus }); } catch(e) { console.error(e); }
-    }
-
-    window.deleteGameItem = async function(firestoreId) {
-        try { await deleteDoc(doc(getGameCollectionRef(), firestoreId)); } catch(e) { console.error(e); }
-    }
-
-    // UI segédek
-    window.showMainTab = function(tabName) {
-        const mediaContent = document.getElementById('media-content');
-        const gameContent = document.getElementById('game-tracker-content');
-
-        document.getElementById('media-main-tab').classList.remove('active-main-tab');
-        document.getElementById('game-main-tab').classList.remove('active-main-tab');
-        document.getElementById(`${tabName}-main-tab`).classList.add('active-main-tab');
-
-        if (tabName === 'media') {
-            mediaContent.style.display = 'block';
-            gameContent.style.display = 'none';
-            document.getElementById('media-sub-tabs').style.display = 'flex';
-            showSubTab(currentCategory);
-        } else {
-            mediaContent.style.display = 'none';
-            gameContent.style.display = 'block';
-            document.getElementById('media-sub-tabs').style.display = 'none';
-        }
-    }
-
-    window.showSubTab = function(category) {
-        currentCategory = category;
-        document.getElementById('media-category-title').textContent = CATEGORY_MAP[category];
-
-        ['joint','cdrama','kdrama','anime','donghua','other'].forEach(cat => {
-            const btn = document.getElementById(`${cat}-sub-tab`);
-            if (btn) btn.classList.toggle('active-sub-tab', cat === category);
-        });
-
-        renderLists();
-    }
-
-    window.changeThemeColor = function(newColor) {
-        document.documentElement.style.setProperty('--theme-color', newColor);
-        localStorage.setItem('trackerThemeColor', newColor);
-    }
-
-    function loadThemeColor() {
-        const saved = localStorage.getItem('trackerThemeColor') || '#ff8c00';
-        const picker = document.getElementById('color-picker');
-        if (picker) picker.value = saved;
-        changeThemeColor(saved);
-    }
-
-    window.toggleMaxEpisodeInput = function() {
-        const type = document.getElementById('tipus-select').value;
-        const maxInput = document.getElementById('max-epizod-input');
-        if (type === 'sorozat') maxInput.style.display = 'block';
-        else { maxInput.style.display = 'none'; maxInput.value = ''; }
-    }
-
-    function renderLists() {
-        const nezendoUl = document.getElementById('nezendo-lista');
-        const megnezveUl = document.getElementById('megnezve-lista');
-        if (!nezendoUl || !megnezveUl) return;
-
-        nezendoUl.innerHTML = '';
-        megnezveUl.innerHTML = '';
-
-        const filtered = trackerList.filter(i => (i.category || 'joint') === currentCategory);
-
-        filtered.forEach(item => {
-            const li = document.createElement('li');
-            li.className = `tracker-item ${item.statusz === 'megnézve' ? 'watched' : ''}`;
-
-            const details = document.createElement('div');
-            details.className = 'item-details';
-
-            const titleRow = document.createElement('div');
-            titleRow.className = 'item-title-row';
-
-            const titleDisplay = document.createElement('strong');
-            titleDisplay.id = `title-display-${item.firestoreId}`;
-            titleDisplay.textContent = item.cim;
-
-            const titleInput = document.createElement('input');
-            titleInput.id = `title-edit-${item.firestoreId}`;
-            titleInput.className = 'title-edit-input';
-            titleInput.value = item.cim;
-            titleInput.type = 'text';
-            titleInput.onkeypress = (e) => { if (e.key === 'Enter') saveItemDetails(item.firestoreId); };
-
-            const editBtn = document.createElement('button');
-            editBtn.id = `edit-btn-${item.firestoreId}`;
-            editBtn.textContent = '✏️ Szerkesztés';
-            editBtn.onclick = () => toggleEditMode(item.firestoreId);
-
-            const saveBtn = document.createElement('button');
-            saveBtn.id = `save-btn-${item.firestoreId}`;
-            saveBtn.className = 'save-button';
-            saveBtn.style.display = 'none';
-            saveBtn.textContent = '💾 Mentés';
-            saveBtn.onclick = () => saveItemDetails(item.firestoreId);
-
-            const cancelBtn = document.createElement('button');
-            cancelBtn.id = `cancel-btn-${item.firestoreId}`;
-            cancelBtn.className = 'cancel-button';
-            cancelBtn.style.display = 'none';
-            cancelBtn.textContent = '❌ Mégse';
-            cancelBtn.onclick = () => toggleEditMode(item.firestoreId);
-
-            titleRow.appendChild(titleDisplay);
-            titleRow.appendChild(titleInput);
-            titleRow.appendChild(editBtn);
-            titleRow.appendChild(saveBtn);
-            titleRow.appendChild(cancelBtn);
-            details.appendChild(titleRow);
-
-            const typeSpan = document.createElement('span');
-            typeSpan.textContent = `(${item.tipus === 'sorozat' ? 'Sorozat' : 'Film'})`;
-            details.appendChild(typeSpan);
-
-            // Link display + edit
-            const linkDisplay = item.link
-                ? document.createElement('a')
-                : document.createElement('span');
-            linkDisplay.id = `link-display-${item.firestoreId}`;
-            if (item.link) {
-                linkDisplay.href = item.link;
-                linkDisplay.textContent = 'Link 🔗';
-                linkDisplay.target = '_blank';
-            } else {
-                linkDisplay.textContent = 'Nincs link';
-                linkDisplay.style.color = '#aaa';
-            }
-            details.appendChild(linkDisplay);
-
-            const linkInput = document.createElement('input');
-            linkInput.id = `link-edit-${item.firestoreId}`;
-            linkInput.className = 'link-edit-input';
-            linkInput.type = 'url';
-            linkInput.value = item.link || '';
-            details.appendChild(linkInput);
-
-            // Episodes display + edit
-            if (item.tipus === 'sorozat') {
-                const epDisplay = document.createElement('span');
-                epDisplay.id = `episodes-display-${item.firestoreId}`;
-                epDisplay.textContent = `Max epizód: ${item.maxEpisodes ?? 'nincs'}`;
-                details.appendChild(epDisplay);
-
-                const epInput = document.createElement('input');
-                epInput.id = `episodes-edit-${item.firestoreId}`;
-                epInput.className = 'episodes-edit-input';
-                epInput.type = 'number';
-                epInput.value = item.maxEpisodes ?? '';
-                details.appendChild(epInput);
-            }
-
-            li.appendChild(details);
-
-            const controls = document.createElement('div');
-            controls.className = 'item-controls';
-
-            if (item.tipus === 'sorozat') {
-                const epControls = document.createElement('div');
-                epControls.className = 'episode-controls';
-                const watched = item.watchedEpisodes ?? 0;
-                const max = item.maxEpisodes ?? '?';
-                epControls.innerHTML = `
-                    <span>Következő epizód: <strong style="color:var(--theme-color)">${watched + 1}</strong></span>
-                    <span>Haladás: <strong>${watched}${max !== '?' ? ' / ' + max : ''}</strong></span>
-                `;
-                const minus = document.createElement('button'); minus.textContent = '-'; minus.onclick = () => changeEpisodeCount(item.firestoreId, -1);
-                const plus = document.createElement('button'); plus.textContent = '+'; plus.onclick = () => changeEpisodeCount(item.firestoreId, 1);
-                epControls.appendChild(minus); epControls.appendChild(plus);
-                controls.appendChild(epControls);
-            }
-
-            const statusBtn = document.createElement('button');
-            if (item.statusz === 'nézendő') {
-                statusBtn.textContent = 'Megnéztem';
-                statusBtn.onclick = () => updateStatus(item.firestoreId, 'megnézve');
-            } else {
-                statusBtn.textContent = 'Mégse láttam';
-                statusBtn.onclick = () => updateStatus(item.firestoreId, 'nézendő');
-            }
-            controls.appendChild(statusBtn);
-
-            const delBtn = document.createElement('button');
-            delBtn.className = 'delete-button';
-            delBtn.textContent = '🗑️ Törlés';
-            delBtn.onclick = () => deleteItem(item.firestoreId);
-            controls.appendChild(delBtn);
-
-            li.appendChild(controls);
-
-            // Notes
-            const notes = document.createElement('div');
-            notes.className = 'notes-container';
-            const label = document.createElement('div'); label.className = 'notes-label'; label.textContent = 'Megjegyzések:'; notes.appendChild(label);
-            const notesDisplay = document.createElement('div'); notesDisplay.id = `notes-display-${item.firestoreId}`; notesDisplay.textContent = item.notes || 'Nincs megjegyzés.'; notes.appendChild(notesDisplay);
-            const notesTextarea = document.createElement('textarea'); notesTextarea.id = `notes-edit-${item.firestoreId}`; notesTextarea.className = 'notes-textarea'; notes.appendChild(notesTextarea);
-            const notesCtrls = document.createElement('div'); notesCtrls.className = 'notes-controls';
-            const nEdit = document.createElement('button'); nEdit.id = `notes-edit-btn-${item.firestoreId}`; nEdit.textContent = '✏️ Szerkesztés'; nEdit.onclick = () => toggleNotesEditMode(item.firestoreId);
-            const nSave = document.createElement('button'); nSave.id = `notes-save-btn-${item.firestoreId}`; nSave.textContent = '💾 Mentés'; nSave.className = 'save-button'; nSave.style.display='none'; nSave.onclick = () => saveNotes(item.firestoreId);
-            const nCancel = document.createElement('button'); nCancel.id = `notes-cancel-btn-${item.firestoreId}`; nCancel.textContent = '❌ Mégse'; nCancel.className = 'cancel-button'; nCancel.style.display='none'; nCancel.onclick = () => toggleNotesEditMode(item.firestoreId);
-            notesCtrls.appendChild(nEdit); notesCtrls.appendChild(nSave); notesCtrls.appendChild(nCancel);
-            notes.appendChild(notesCtrls);
-            li.appendChild(notes);
-
-            if (item.statusz === 'nézendő') nezendoUl.appendChild(li); else megnezveUl.appendChild(li);
-        });
-    }
-
-    function renderGameLists() {
-        const n = document.getElementById('game-nezendo-lista');
-        const m = document.getElementById('game-megnezve-lista');
-        if (!n || !m) return;
-        n.innerHTML = ''; m.innerHTML = '';
-        gameList.forEach(item => {
-            const li = document.createElement('li'); li.className = `tracker-item ${item.statusz === 'kijátszottam' ? 'watched' : ''}`;
-            const d = document.createElement('div'); d.className = 'item-details'; d.innerHTML = `<strong>${item.cim}</strong><span>(${item.platform})</span>`;
-            const ctrls = document.createElement('div'); ctrls.className = 'item-controls';
-            const statusBtn = document.createElement('button');
-            if (item.statusz === 'játszandó') { statusBtn.textContent = 'Kijátszottam'; statusBtn.onclick = () => updateGameStatus(item.firestoreId, 'kijátszottam'); }
-            else { statusBtn.textContent = 'Mégse játszottam'; statusBtn.onclick = () => updateGameStatus(item.firestoreId, 'játszandó'); }
-            const delBtn = document.createElement('button'); delBtn.className='delete-button'; delBtn.textContent='🗑️ Törlés'; delBtn.onclick = () => deleteGameItem(item.firestoreId);
-            ctrls.appendChild(statusBtn); ctrls.appendChild(delBtn);
-            li.appendChild(d); li.appendChild(ctrls);
-            if (item.statusz === 'játszandó') n.appendChild(li); else m.appendChild(li);
-        });
-    }
-
-    window.onload = () => {
-        toggleMaxEpisodeInput();
-        checkInitialAccess();
-    };
-</script>
-</body>
-</html>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAKEKZzgKSTFQ3_K6Yhm7aPvTX5plMzXYg",
+  authDomain: "tracker-fbe21.firebaseapp.com",
+  projectId: "tracker-fbe21",
+  storageBucket: "tracker-fbe21.firebasestorage.app",
+  messagingSenderId: "402979419538",
+  appId: "1:402979419538:web:ff7924c73c306ff8527d4b"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const SHARED_UID = "SHARED_FRIENDS_GROUP";
+const MEDIA_COLLECTION_NAME = "media";
+const GAME_COLLECTION_NAME = "games";
+let trackerList = [];
+let gameList = [];
+let currentCategory = "joint";
+
+function getMediaCollectionRef() { return collection(db, "users", SHARED_UID, MEDIA_COLLECTION_NAME); }
+function getGameCollectionRef() { return collection(db, "users", SHARED_UID, GAME_COLLECTION_NAME); }
+
+signInAnonymously(auth).then(() => {
+  onSnapshot(getMediaCollectionRef(), (snapshot) => {
+    trackerList = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+    renderLists();
+  });
+  onSnapshot(getGameCollectionRef(), (snapshot) => {
+    gameList = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+    renderGameLists();
+  });
+});
+
+// --- CRUD funkciók ---
+window.addNewItem = async function() {
+  const cim = document.getElementById('cim-input').value.trim();
+  const tipus = document.getElementById('tipus-select').value;
+  const maxEp = document.getElementById('max-epizod-input').value;
+  const link = document.getElementById('link-input').value.trim();
+  if (!cim) return;
+  const newItem = {
+    cim, tipus,
+    statusz:"nézendő",
+    watchedEpisodes: tipus==="sorozat"?0:null,
+    maxEpisodes: tipus==="sorozat" && maxEp ? parseInt(maxEp,10):null,
+    link: link||null,
+    category: currentCategory,
+    notes:""
+  };
+  await addDoc(getMediaCollectionRef(), newItem);
+  document.getElementById('cim-input').value="";
+  document.getElementById('max-epizod-input').value="";
+  document.getElementById('link-input').value="";
+};
+
+window.deleteItem = async id => { await deleteDoc(doc(getMediaCollectionRef(), id)); };
+window.updateStatus = async (id, st) => { await updateDoc(doc(getMediaCollectionRef(), id), {statusz:st}); };
+
+window.changeEpisodeCount = async (id, delta) => {
+  const item = trackerList.find(i=>i.firestoreId===id);
+  if (!item || item.tipus!=="sorozat") return;
+  let newCount=(item.watchedEpisodes??0)+delta;
+  newCount=Math.max(0,newCount);
+  if(item.maxEpisodes) newCount=Math.min(newCount,item.maxEpisodes);
+  let newStatus=item.statusz;
+  if(item.maxEpisodes && newCount===item.maxEpisodes) newStatus="megnézve";
+  else if(newStatus==="megnézve" && item.maxEpisodes && newCount<item.maxEpisodes) newStatus="nézendő";
+  await updateDoc(doc(getMediaCollectionRef(),id),{watchedEpisodes:newCount,statusz:newStatus});
+};
+
+// --- Szerkesztés ---
+window.toggleEditMode = function(id){
+  const editBtn=document.getElementById(`edit-btn-${id}`);
+  const saveBtn=document.getElementById(`save-btn-${id}`);
+  const cancelBtn=document.getElementById(`cancel-btn-${id}`);
+  const titleDisplay=document.getElementById(`title-display-${id}`);
+  const titleInput=document.getElementById(`title-edit-${id}`);
+  const linkDisplay=document.getElementById(`link-display-${id}`);
+  const linkInput=document.getElementById(`link-edit-${id}`);
+  const episodesDisplay=document.getElementById(`episodes-display-${id}`);
+  const episodesInput=document.getElementById(`episodes-edit-${id}`);
+  const isEditing=editBtn.style.display==="none";
+  if(!isEditing){
+    if(titleDisplay) titleDisplay.style.display="none";
+    if(titleInput) titleInput.style.display="inline-block";
+    if(linkDisplay) linkDisplay.style.display="none";
+    if(linkInput) linkInput.style.display="inline-block";
+    if(episodesDisplay) episodesDisplay.style.display="none";
+    if(episodesInput) episodesInput.style.display="inline-block";
+    editBtn.style.display="none"; saveBtn.style.display="inline-block"; cancelBtn.style.display="inline-block";
+  } else {
+    if(titleDisplay) titleDisplay.style.display="inline-block";
+    if(titleInput) titleInput.style.display="none";
+    if(linkDisplay) linkDisplay.style.display="inline-block";
+    if(linkInput) linkInput.style.display="none";
+    if(episodesDisplay) episodesDisplay.style.display="inline-block";
+    if(episodesInput) episodesInput.style.display="none";
+    editBtn.style.display="inline-block"; saveBtn.style.display="none"; cancelBtn.style.display="none";
+  }
+};
+
+window.saveItemDetails = async function(id){
+  const titleInput=document.getElementById(`title-edit-${id}`);
+  const linkInput=document.getElementById(`link-edit-${id}`);
+  const episodesInput=document.getElementById(`episodes-edit-${id}`);
+  const updates={};
+  if(titleInput){ const t=titleInput.value.trim(); if(t) updates.cim=t; }
+  if(linkInput){ const l=linkInput.value.trim(); updates.link=l||null; }
+  let newMax=null;
+  if(episodesInput){ const p=parseInt(episodesInput.value,10); if(!isNaN(p)&&p>=0){updates.maxEpisodes=p; newMax=p;} }
+  const item=trackerList.find(i=>i.firestoreId===id);
+  if(item && item.tipus==="sorozat" && newMax!==null){
+    const watched=item.watchedEpisodes??0;
+    const corrected=Math.min(watched,newMax);
+    updates.watchedEpisodes=corrected;
+    updates.statusz=(newMax>0 && corrected===newMax)?"megnézve":"nézendő";
+  }
+  await updateDoc(doc(getMediaCollectionRef(),id),updates);
+  toggleEditMode(id);
+};
+
+// --- Render ---
+function renderLists(){
+  const nezendoUl=document.getElementById("nezendo-lista");
+  const megnezveUl=document.getElementById("megnezve-lista");
+  nezendoUl.innerHTML=""; megnezveUl.innerHTML="";
+  const filtered=trackerList.filter(i=>(i.category||"joint")===currentCategory).sort((a,b)=>a.cim.localeCompare(b.cim));
+  filtered.forEach(item=>{
+    const li=document.createElement("li");
+    li.className=`tracker-item ${item.statusz==="megnézve"?"watched":""}`;
+    const details=document.createElement("div"); details.className="item-details";
+    const row=document.createElement("div"); row.className="item-title-row";
+    const title=document.createElement("strong"); title.id=`title-display-${item.firestoreId}`; title.textContent=item.cim;
+    const titleInput=document.createElement("input"); titleInput.id=`title-edit-${item.firestoreId}`; titleInput.className="title-edit-input"; titleInput.value=item.cim;
+    const editBtn=document.createElement("button"); editBtn.id=`edit-btn-${item.firestoreId}`; editBtn.textContent="✏️ Szerkesztés"; editBtn.onclick=()=>toggleEditMode(item.firestoreId);
+    const saveBtn=document.createElement("button"); saveBtn.id=`save-btn-${item.firestoreId}`; saveBtn.className="save-button"; saveBtn.style.display="none"; saveBtn.textContent="💾 Mentés"; saveBtn.onclick=()=>saveItemDetails(item.firestoreId);
+    const cancelBtn=document.createElement("button"); cancelBtn.id=`cancel-btn-${item.firestoreId}`; cancelBtn.className="cancel-button"; cancelBtn.style.display="none"; cancelBtn.textContent="❌ Mégse"; cancelBtn.onclick=()=>toggleEditMode(item.firestoreId);
+    row.append(title,titleInput,editBtn,saveBtn,cancelBtn); details.appendChild(row);
+    const typeSpan=document.createElement("span"); typeSpan.textContent=`(${item.tipus==="sorozat"?"Sorozat":"Film"})`; details.appendChild(typeSpan);
+    const linkDisplay=document.createElement(item.link?"a":"span"); linkDisplay.id=`link-display-${
