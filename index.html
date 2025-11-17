@@ -143,7 +143,7 @@
         }
         .episode-controls button { background-color: #555; color: #f0f0f0; padding: 5px 10px; box-shadow: none; }
         
-        /* Fő szerkesztő gomb (Edit, Mentés, Mégse, Send) stílusa */
+        /* Fő szerkesztő gomb (Edit, Mentés, Mégse, Send, Back) stílusa */
         .title-action-btn { 
             font-size: 1em; 
             padding: 10px 15px; 
@@ -160,7 +160,12 @@
         /* Külön Mentés és Mégse színek, amelyek kontrasztosak */
         .save-button { background-color: #28a745; color: white; } 
         .cancel-button { background-color: #6c757d; color: white; } 
-        /* A Send gomb megkapja a default theme-color színt a .title-action-btn-től */
+        
+        /* ÚJ: Back gomb stílusa (a Send gomb a default theme-color-t használja) */
+        .back-button {
+            background-color: #007bff; /* Eltérő szín a Back gombhoz */
+            color: white;
+        }
 
         /* Törlés gomb stílusa, amihez a többinek igazodnia kell */
         .delete-button-matched { 
@@ -177,7 +182,7 @@
             flex-wrap: wrap; 
             gap: 10px; 
             margin-top: 5px;
-            flex-direction: column; /* Stackelés, hogy az Edit gomb a Törlés gomb alatt jelenjen meg */
+            flex-direction: column; /* Stackelés, hogy az Edit/Send/Back gombok a Törlés gomb alatt jelenjenek meg */
             align-items: flex-end; 
             gap: 5px;
             min-width: 170px; 
@@ -384,7 +389,8 @@
     // --- FIREBASE IMPORT ÉS KONFIGURÁCIÓ ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    // Hozzáadva a deleteField a Firestore mező törléséhez
+    import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
     // AZ ÁLTALAD MEGADOTT FIREBASE KONFIGURÁCIÓ
     const firebaseConfig = {
@@ -528,6 +534,8 @@
                 category: doc.data().category || 'joint', 
                 // Biztosítjuk, hogy legyen notes mező, ha hiányzik a régi elemekről
                 notes: doc.data().notes || '', 
+                // Biztosítjuk, hogy legyen previousCategory mező, ha hiányzik
+                previousCategory: doc.data().previousCategory || null,
                 ...doc.data()
             }));
             renderLists(); // Frissítés az összes média fülön
@@ -566,7 +574,8 @@
             maxEpisodes: (tipus === 'sorozat' && maxEpizodInput ? parseInt(maxEpizodInput) : null),
             link: (linkInput || null),
             category: currentCategory, // Aktuális kategória hozzáadva
-            notes: "" // Új megjegyzés mező inicializálása üres stringgel
+            notes: "", // Új megjegyzés mező inicializálása üres stringgel
+            previousCategory: null // Új mező a visszaküldéshez
         };
 
         try {
@@ -600,14 +609,40 @@
     
     // ÚJ: Elem áthelyezése a "Közös nézés" kategóriába
     window.sendToJoint = async function(firestoreId) {
+        const item = trackerList.find(i => i.firestoreId === firestoreId);
+        if (!item) return;
+        
+        if (item.category === 'joint') return; // Ne küldjük át, ha már ott van
+
         try {
             await updateDoc(doc(getMediaCollectionRef(), firestoreId), {
-                category: 'joint' 
+                category: 'joint',
+                // Mentjük az előző kategóriát
+                previousCategory: item.category 
             });
         } catch (e) {
             console.error("Hiba az elem közös listára küldésekor: ", e);
         }
     }
+
+    // ÚJ: Elem visszaküldése az eredeti kategóriába
+    window.sendBackFromJoint = async function(firestoreId) {
+        const item = trackerList.find(i => i.firestoreId === firestoreId);
+        if (!item || item.category !== 'joint' || !item.previousCategory) return;
+        
+        const originalCategory = item.previousCategory;
+        
+        try {
+            // Visszaállítás az eredeti kategóriára és a previousCategory mező törlése
+            await updateDoc(doc(getMediaCollectionRef(), firestoreId), {
+                category: originalCategory,
+                previousCategory: deleteField() 
+            });
+        } catch (e) {
+            console.error("Hiba az elem visszaküldésekor: ", e);
+        }
+    }
+
 
     window.changeEpisodeCount = async function(firestoreId, delta) {
         const item = trackerList.find(item => item.firestoreId === firestoreId);
@@ -699,6 +734,7 @@
         
         // Gombok
         const sendBtn = document.getElementById(`send-btn-${firestoreId}`);
+        const backBtn = document.getElementById(`back-btn-${firestoreId}`); // Új: Back gomb
         const editBtn = document.getElementById(`edit-btn-${firestoreId}`);
         const saveBtn = document.getElementById(`save-btn-${firestoreId}`);
         const cancelBtn = document.getElementById(`cancel-btn-${firestoreId}`);
@@ -733,6 +769,7 @@
             if (maxEpInput) maxEpInput.value = currentItem.maxEpisodes || ''; 
             
             if (sendBtn) sendBtn.style.display = 'none'; // Rejtett Send
+            if (backBtn) backBtn.style.display = 'none'; // Rejtett Back
             editBtn.style.display = 'none'; // Rejtett Edit
             saveBtn.style.display = 'block'; // Látható Save
             cancelBtn.style.display = 'block'; // Látható Cancel
@@ -756,7 +793,10 @@
             if (notesDisplay) notesDisplay.style.display = 'block'; 
             if (notesTextarea) notesTextarea.style.display = 'none';
             
-            if (sendBtn && currentItem.category !== 'joint') sendBtn.style.display = 'block'; // Mutat Send (ha nem joint)
+            // Visszamutatjuk a SEND/BACK gombot, ha a DOM-ban van
+            if (sendBtn) sendBtn.style.display = 'block'; 
+            if (backBtn) backBtn.style.display = 'block'; 
+
             editBtn.style.display = 'block'; // Mutat Edit
             saveBtn.style.display = 'none'; // Rejtett Save
             cancelBtn.style.display = 'none'; // Rejtett Cancel
@@ -879,6 +919,9 @@
         
         // Szűrés az aktuális kategóriára
         const filteredList = trackerList.filter(item => item.category === currentCategory);
+        
+        const isJointCategory = currentCategory === 'joint';
+
 
         filteredList.forEach(item => {
             const li = document.createElement('li');
@@ -1002,18 +1045,29 @@
 
             controls.appendChild(controlsRow); // Hozzáadjuk a sort
 
-            // 4. Szerkesztő Gombok (Edit, Save, Cancel) - FIX SZÉLESSÉGBEN STACKELVE A SOR ALATT
+            // 4. Szerkesztő Gombok (Send/Back, Edit, Save, Cancel) - FIX SZÉLESSÉGBEN STACKELVE A SOR ALATT
             
-            // ÚJ: Send gomb (csak ha nem 'joint' kategóriában van)
-            if (item.category !== 'joint') {
+            
+            if (!isJointCategory) {
+                // Send gomb (csak ha nem 'joint' kategóriában van)
                 const sendButton = document.createElement('button');
                 sendButton.textContent = '➡️ Send'; 
                 sendButton.id = `send-btn-${item.firestoreId}`;
-                sendButton.className = 'title-action-btn'; // Használjuk a méretezett stílust
+                sendButton.className = 'title-action-btn'; 
                 sendButton.title = 'Átküldés Közös nézés listára';
                 sendButton.onclick = () => sendToJoint(item.firestoreId);
                 controls.appendChild(sendButton);
+            } else if (isJointCategory && item.previousCategory) {
+                // Back gomb (csak ha 'joint' kategóriában van és van honnan visszamenni)
+                const backButton = document.createElement('button');
+                backButton.textContent = '⬅️ Back'; 
+                backButton.id = `back-btn-${item.firestoreId}`;
+                backButton.className = 'title-action-btn back-button'; // Külön stílus a Back-nek
+                backButton.title = 'Visszaküldés az eredeti listára';
+                backButton.onclick = () => sendBackFromJoint(item.firestoreId);
+                controls.appendChild(backButton);
             }
+
 
             const editButton = document.createElement('button');
             editButton.textContent = 'Edit'; 
@@ -1081,7 +1135,7 @@
     function renderGameLists() {
         const nezendoUl = document.getElementById('game-nezendo-lista');
         const megnezveUl = document.getElementById('game-megnezve-lista');
-        if (!nezendoUl || !megmezveUl) return;
+        if (!nezendoUl || !megnezveUl) return;
         nezendoUl.innerHTML = '';
         megnezveUl.innerHTML = '';
         
