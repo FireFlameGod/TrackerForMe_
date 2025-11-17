@@ -143,44 +143,39 @@
         }
         .episode-controls button { background-color: #555; color: #f0f0f0; padding: 5px 10px; box-shadow: none; }
         
-        /* ÚJ, KISEBB GOMB STÍLUSOK A CÍMHEZ ÉS TÉMASZÍNEZÉS */
-        .title-action-btn, .notes-action-btn { 
-            padding: 5px 10px; 
-            font-size: 0.9em; 
-            margin-left: 5px;
-            box-shadow: none;
-            transition: background-color 0.2s;
-            border-radius: 4px;
+        /* ÚJ: Fő szerkesztő gomb stílusa a fő gomb méretével */
+        .title-action-btn { 
+            font-size: 1em; 
+            padding: 10px 15px; 
+            margin-left: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
             background-color: var(--theme-color); 
             color: #1e1e1e; 
-        }
-
-        /* Az Edit gomb új stílusa, hogy ne feszüljön ki a controls-ban */
-        .item-controls .title-action-btn {
-            margin-top: 10px;
-            margin-left: 0;
             width: 100%; /* Kitölti a controls divet */
+            margin-top: 10px;
             text-align: center;
         }
-        
+
         /* Külön Mentés és Mégse színek, amelyek kontrasztosak */
         .save-button { background-color: #28a745; color: white; } 
         .cancel-button { background-color: #6c757d; color: white; } 
 
         .delete-button { background-color: #dc3545; color: white; margin-left: 10px; }
+        
+        /* Vezérlők konténere */
         .item-controls { 
             display: flex; 
             align-items: center; 
             flex-wrap: wrap; 
             gap: 10px; 
             margin-top: 5px;
-            /* Ez a beállítás lehetővé teszi, hogy a gombok egymás alá kerüljenek, ha a tartalom nem fér el, ami az Edit gomb áthelyezése miatt szükséges */
             flex-direction: column; 
             align-items: flex-end; 
             gap: 5px;
         }
 
-        /* Hogy a Statusz és Törlés gomb ne essen szét */
+        /* Hogy a Statusz és Törlés gomb egy sorban maradjon */
         .item-controls .controls-row {
             display: flex;
             align-items: center;
@@ -228,7 +223,7 @@
             margin-bottom: 5px;
         }
 
-        #notes-display-area {
+        .notes-display-area {
             font-size: 0.9em;
             white-space: pre-wrap; /* Sortörések megtartása */
             min-height: 20px; 
@@ -247,13 +242,9 @@
             box-sizing: border-box;
             resize: vertical;
         }
-        
-        .notes-controls {
-            margin-top: 10px;
-            display: flex;
-            gap: 10px;
-        }
 
+        /* Megjegyzés vezérlők törölve */
+        
         /* --- HALADÓ ADATOK STÍLUSA --- */
         #advanced-info-toggle {
             background-color: #333;
@@ -628,17 +619,18 @@
         }
     }
     
-    // === CÍM, LINK ÉS MAX EPIZÓD SZERKESZTÉSI LOGIKA ===
+    // === CÍM, LINK, MAX EPIZÓD ÉS MEGJEGYZÉS SZERKESZTÉSI LOGIKA ===
 
     window.saveMediaItem = async function(firestoreId) {
         const titleInput = document.getElementById(`title-edit-${firestoreId}`);
         const linkInput = document.getElementById(`link-edit-${firestoreId}`);
-        // Max epizód input lekérése, csak sorozatoknál létezik
         const maxEpInput = document.getElementById(`max-episode-edit-${firestoreId}`); 
+        const notesTextarea = document.getElementById(`notes-edit-${firestoreId}`); // Megjegyzés mező
         
         const newTitle = titleInput ? titleInput.value.trim() : null;
         const newLink = linkInput ? linkInput.value.trim() : null;
         const newMaxEpisodes = maxEpInput ? parseInt(maxEpInput.value) : null; 
+        const newNotes = notesTextarea ? notesTextarea.value : null;
 
         if (!firestoreId || !titleInput) { return; }
 
@@ -650,6 +642,7 @@
         const updateData = {
             cim: newTitle,
             link: newLink || null, // Üres string null-ra vált
+            notes: newNotes || "" // Megjegyzések mentése
         };
 
         const currentItem = trackerList.find(item => item.firestoreId === firestoreId);
@@ -671,7 +664,6 @@
             await updateDoc(doc(getMediaCollectionRef(), firestoreId), updateData);
         } catch (e) {
             console.error("Hiba az elem frissítésekor: ", e);
-            toggleEditMode(firestoreId);
         }
     }
     
@@ -684,8 +676,12 @@
         const linkDisplay = document.getElementById(`link-display-${firestoreId}`);
         const linkInput = document.getElementById(`link-edit-${firestoreId}`);
 
-        // Max epizód mező (Csak input, a megjelenített Max Epizód törölve lett a HTML-ből)
+        // Max epizód mező (Csak input)
         const maxEpInput = document.getElementById(`max-episode-edit-${firestoreId}`);
+
+        // Megjegyzés mezők
+        const notesDisplay = document.getElementById(`notes-display-${firestoreId}`);
+        const notesTextarea = document.getElementById(`notes-edit-${firestoreId}`);
         
         // Gombok
         const editBtn = document.getElementById(`edit-btn-${firestoreId}`);
@@ -703,18 +699,25 @@
             titleInput.style.display = 'inline-block';
             
             // Link mezők
-            if (linkDisplay) linkDisplay.style.display = 'none'; // A link lehet <a> vagy <span>
+            if (linkDisplay) linkDisplay.style.display = 'none'; 
             if (linkInput) linkInput.style.display = 'inline-block';
             
             // Max Epizód mező (csak sorozatnál)
             if (currentItem.tipus === 'sorozat') {
                 if (maxEpInput) maxEpInput.style.display = 'inline-block';
             }
+
+            // Megjegyzés mezők
+            if (notesDisplay) notesDisplay.style.display = 'none';
+            if (notesTextarea) {
+                notesTextarea.style.display = 'block';
+                notesTextarea.value = currentItem.notes || ''; // Érték betöltése
+            }
             
             // Adatok betöltése
             titleInput.value = currentItem.cim; 
             if (linkInput) linkInput.value = currentItem.link || ''; 
-            if (maxEpInput) maxEpInput.value = currentItem.maxEpisodes || ''; // Érték betöltése
+            if (maxEpInput) maxEpInput.value = currentItem.maxEpisodes || ''; 
             
             editBtn.style.display = 'none';
             saveBtn.style.display = 'inline-block';
@@ -729,73 +732,17 @@
             titleInput.style.display = 'none';
             
             // Link mezők
-            if (linkDisplay) linkDisplay.style.display = 'block'; // Block, mert hivatkozás
+            if (linkDisplay) linkDisplay.style.display = 'block'; 
             if (linkInput) linkInput.style.display = 'none';
 
             // Max Epizód mező (csak sorozatnál)
             if (currentItem.tipus === 'sorozat') {
                 if (maxEpInput) maxEpInput.style.display = 'none';
             }
-            
-            editBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-        }
-    }
 
-    // === MEGJEGYZÉSEK SZERKESZTÉSI LOGIKA ===
-
-    window.saveNotes = async function(firestoreId) {
-        const textarea = document.getElementById(`notes-edit-${firestoreId}`);
-        const newNotes = textarea ? textarea.value : null;
-
-        if (!firestoreId || newNotes === null) {
-            console.error("Hiba: Érvénytelen Megjegyzés mező.");
-            return;
-        }
-
-        try {
-            await updateDoc(doc(getMediaCollectionRef(), firestoreId), {
-                notes: newNotes
-            });
-            // A listener újrarendezi, ami kikapcsolja a szerkesztő módot.
-        } catch (e) {
-            console.error("Hiba a megjegyzés frissítésekor: ", e);
-            toggleNotesEditMode(firestoreId);
-        }
-    }
-
-    window.toggleNotesEditMode = function(firestoreId) {
-        const display = document.getElementById(`notes-display-${firestoreId}`);
-        const textarea = document.getElementById(`notes-edit-${firestoreId}`);
-        const editBtn = document.getElementById(`notes-edit-btn-${firestoreId}`);
-        const saveBtn = document.getElementById(`notes-save-btn-${firestoreId}`);
-        const cancelBtn = document.getElementById(`notes-cancel-btn-${firestoreId}`);
-        
-        if (!display || !textarea || !editBtn || !saveBtn || !cancelBtn) { return; } 
-
-        const isEditing = textarea.style.display !== 'none';
-        
-        if (!isEditing) {
-            // Szerkesztési mód bekapcsolása
-            display.style.display = 'none';
-            textarea.style.display = 'block';
-            
-            // Töltse be az aktuális szöveget a textarea-ba
-            const currentItem = trackerList.find(item => item.firestoreId === firestoreId);
-            if (currentItem) {
-                textarea.value = currentItem.notes;
-            }
-
-            editBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-block';
-            cancelBtn.style.display = 'inline-block';
-            
-            textarea.focus();
-        } else {
-            // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
-            display.style.display = 'block';
-            textarea.style.display = 'none';
+            // Megjegyzés mezők
+            if (notesDisplay) notesDisplay.style.display = 'block'; 
+            if (notesTextarea) notesTextarea.style.display = 'none';
             
             editBtn.style.display = 'inline-block';
             saveBtn.style.display = 'none';
@@ -1010,7 +957,6 @@
             
             titleContainer.appendChild(titleDisplay);
             titleContainer.appendChild(titleInput);
-            // NEM ADJUK HOZZÁ IDE AZ EDIT GOMBOT: titleContainer.appendChild(editButton);
             titleContainer.appendChild(saveButton);
             titleContainer.appendChild(cancelButton); 
 
@@ -1089,7 +1035,6 @@
             notesDisplay.id = `notes-display-${item.firestoreId}`;
             notesDisplay.textContent = item.notes || 'Nincs megjegyzés.';
             notesDisplay.style.display = 'block'; 
-            notesDisplay.id = `notes-display-${item.firestoreId}`;
             notesDisplay.className = 'notes-display-area';
             notesContainer.appendChild(notesDisplay);
 
@@ -1099,41 +1044,9 @@
             notesTextarea.className = 'notes-textarea';
             notesTextarea.style.display = 'none';
             notesContainer.appendChild(notesTextarea);
-
-            // Megjegyzés vezérlők
-            const notesControls = document.createElement('div');
-            notesControls.className = 'notes-controls';
-
-            // Megjegyzés Szerkesztés gomb
-            const notesEditButton = document.createElement('button');
-            notesEditButton.textContent = '✏️ Megjegyzés szerk.';
-            notesEditButton.id = `notes-edit-btn-${item.firestoreId}`;
-            notesEditButton.className = 'notes-action-btn edit-button';
-            notesEditButton.setAttribute('data-action', 'edit-notes');
-            notesEditButton.setAttribute('data-id', item.firestoreId);
-            notesControls.appendChild(notesEditButton);
-
-            // Megjegyzés Mentés gomb
-            const notesSaveButton = document.createElement('button');
-            notesSaveButton.textContent = '✅ Mentés';
-            notesSaveButton.id = `notes-save-btn-${item.firestoreId}`;
-            notesSaveButton.className = 'notes-action-btn save-button';
-            notesSaveButton.style.display = 'none';
-            notesSaveButton.setAttribute('data-action', 'save-notes');
-            notesSaveButton.setAttribute('data-id', item.firestoreId);
-            notesControls.appendChild(notesSaveButton);
-
-            // Megjegyzés Mégse gomb
-            const notesCancelButton = document.createElement('button');
-            notesCancelButton.textContent = '❌ Mégse';
-            notesCancelButton.id = `notes-cancel-btn-${item.firestoreId}`;
-            notesCancelButton.className = 'notes-action-btn cancel-button';
-            notesCancelButton.style.display = 'none';
-            notesCancelButton.setAttribute('data-action', 'cancel-notes');
-            notesCancelButton.setAttribute('data-id', item.firestoreId);
-            notesControls.appendChild(notesCancelButton);
-
-            notesContainer.appendChild(notesControls);
+            
+            // A megjegyzés vezérlők törölve, a fő edit gomb vezérli
+            
             li.appendChild(notesContainer);
             // --- MEGJEGYZÉSEK SZEKCIÓ VÉGE ---
 
@@ -1198,7 +1111,7 @@
         const target = event.target;
         const firestoreId = target.getAttribute('data-id');
         
-        // 1. Média Elem Szerkesztés / Mentés / Mégse (Cím, Link, Max Ep)
+        // Média Elem Szerkesztés / Mentés / Mégse (Cím, Link, Max Ep, Megjegyzés)
         if (target.matches('[data-action="edit-media"]')) {
             toggleEditMode(firestoreId);
         }
@@ -1209,19 +1122,6 @@
 
         if (target.matches('[data-action="cancel-media"]')) {
              if (firestoreId) toggleEditMode(firestoreId);
-        }
-
-        // 2. Megjegyzés Szerkesztés / Mentés / Mégse
-        if (target.matches('[data-action="edit-notes"]')) {
-            toggleNotesEditMode(firestoreId);
-        }
-
-        if (target.matches('[data-action="save-notes"]')) {
-            if (firestoreId) saveNotes(firestoreId);
-        }
-
-        if (target.matches('[data-action="cancel-notes"]')) {
-            if (firestoreId) toggleNotesEditMode(firestoreId);
         }
     });
 
