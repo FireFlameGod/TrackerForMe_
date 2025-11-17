@@ -143,7 +143,7 @@
         }
         .episode-controls button { background-color: #555; color: #f0f0f0; padding: 5px 10px; box-shadow: none; }
         
-        /* Fő szerkesztő gomb (Edit, Mentés, Mégse) stílusa */
+        /* Fő szerkesztő gomb (Edit, Mentés, Mégse, Send) stílusa */
         .title-action-btn { 
             font-size: 1em; 
             padding: 10px 15px; 
@@ -160,6 +160,7 @@
         /* Külön Mentés és Mégse színek, amelyek kontrasztosak */
         .save-button { background-color: #28a745; color: white; } 
         .cancel-button { background-color: #6c757d; color: white; } 
+        /* A Send gomb megkapja a default theme-color színt a .title-action-btn-től */
 
         /* Törlés gomb stílusa, amihez a többinek igazodnia kell */
         .delete-button-matched { 
@@ -596,6 +597,17 @@
             console.error("Hiba a státusz frissítésekor: ", e);
         }
     }
+    
+    // ÚJ: Elem áthelyezése a "Közös nézés" kategóriába
+    window.sendToJoint = async function(firestoreId) {
+        try {
+            await updateDoc(doc(getMediaCollectionRef(), firestoreId), {
+                category: 'joint' 
+            });
+        } catch (e) {
+            console.error("Hiba az elem közös listára küldésekor: ", e);
+        }
+    }
 
     window.changeEpisodeCount = async function(firestoreId, delta) {
         const item = trackerList.find(item => item.firestoreId === firestoreId);
@@ -686,6 +698,7 @@
         const notesTextarea = document.getElementById(`notes-edit-${firestoreId}`);
         
         // Gombok
+        const sendBtn = document.getElementById(`send-btn-${firestoreId}`);
         const editBtn = document.getElementById(`edit-btn-${firestoreId}`);
         const saveBtn = document.getElementById(`save-btn-${firestoreId}`);
         const cancelBtn = document.getElementById(`cancel-btn-${firestoreId}`);
@@ -719,10 +732,11 @@
             if (linkInput) linkInput.value = currentItem.link || ''; 
             if (maxEpInput) maxEpInput.value = currentItem.maxEpisodes || ''; 
             
-            editBtn.style.display = 'none';
-            saveBtn.style.display = 'block'; 
-            cancelBtn.style.display = 'block'; 
-            if (deleteBtn) deleteBtn.style.display = 'none'; // Elrejtjük a törlés gombot
+            if (sendBtn) sendBtn.style.display = 'none'; // Rejtett Send
+            editBtn.style.display = 'none'; // Rejtett Edit
+            saveBtn.style.display = 'block'; // Látható Save
+            cancelBtn.style.display = 'block'; // Látható Cancel
+            if (deleteBtn) deleteBtn.style.display = 'none'; // Rejtett Törlés
             
             titleInput.focus();
             const len = titleInput.value.length;
@@ -742,10 +756,11 @@
             if (notesDisplay) notesDisplay.style.display = 'block'; 
             if (notesTextarea) notesTextarea.style.display = 'none';
             
-            editBtn.style.display = 'block'; 
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-            if (deleteBtn) deleteBtn.style.display = 'block'; // Visszamutatjuk a törlés gombot
+            if (sendBtn && currentItem.category !== 'joint') sendBtn.style.display = 'block'; // Mutat Send (ha nem joint)
+            editBtn.style.display = 'block'; // Mutat Edit
+            saveBtn.style.display = 'none'; // Rejtett Save
+            cancelBtn.style.display = 'none'; // Rejtett Cancel
+            if (deleteBtn) deleteBtn.style.display = 'block'; // Mutat Törlés
         }
     }
 
@@ -987,7 +1002,18 @@
 
             controls.appendChild(controlsRow); // Hozzáadjuk a sort
 
-            // 4. Szerkesztő Gombok (Edit, Save, Cancel) - FIX SZÉLESSÉGŰEN STACKELVE A SOR ALATT
+            // 4. Szerkesztő Gombok (Edit, Save, Cancel) - FIX SZÉLESSÉGBEN STACKELVE A SOR ALATT
+            
+            // ÚJ: Send gomb (csak ha nem 'joint' kategóriában van)
+            if (item.category !== 'joint') {
+                const sendButton = document.createElement('button');
+                sendButton.textContent = '➡️ Send'; 
+                sendButton.id = `send-btn-${item.firestoreId}`;
+                sendButton.className = 'title-action-btn'; // Használjuk a méretezett stílust
+                sendButton.title = 'Átküldés Közös nézés listára';
+                sendButton.onclick = () => sendToJoint(item.firestoreId);
+                controls.appendChild(sendButton);
+            }
 
             const editButton = document.createElement('button');
             editButton.textContent = 'Edit'; 
@@ -1055,7 +1081,7 @@
     function renderGameLists() {
         const nezendoUl = document.getElementById('game-nezendo-lista');
         const megnezveUl = document.getElementById('game-megnezve-lista');
-        if (!nezendoUl || !megnezveUl) return;
+        if (!nezendoUl || !megmezveUl) return;
         nezendoUl.innerHTML = '';
         megnezveUl.innerHTML = '';
         
