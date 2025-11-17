@@ -712,6 +712,7 @@
         if (!firestoreId || !titleInput) { return; }
 
         if (!newTitle || newTitle === "") { 
+            // Cím üres, visszatérünk a normál nézethez
             toggleEditMode(firestoreId); 
             return; 
         }
@@ -736,12 +737,11 @@
         
         try {
             await updateDoc(doc(getMediaCollectionRef(), firestoreId), updateData);
+            // *** MÓDOSÍTÁS: Eltávolítottam a toggleEditMode hívást innen! ***
+            // Az onSnapshot listener automatikusan frissíti a listát, ami visszaállítja a normál nézetet.
         } catch (e) {
             console.error("Hiba az elem frissítésekor: ", e);
         }
-        
-        // Vissza a normál nézethez
-        toggleEditMode(firestoreId); 
     }
     
     window.toggleEditMode = function(firestoreId) {
@@ -1247,10 +1247,12 @@
         
         if (target.matches('[data-action="save-media"]')) {
              if (firestoreId) saveMediaItem(firestoreId);
+             // *** MEGJEGYZÉS: saveMediaItem most már csak adatot ment, a renderelés onSnapshot által történik. ***
         }
 
         if (target.matches('[data-action="cancel-media"]')) {
              if (firestoreId) toggleEditMode(firestoreId);
+             // A Cancel gomb továbbra is azonnal visszaállítja a normál nézetet, mivel nem történik adatbázis-művelet.
         }
     });
 
