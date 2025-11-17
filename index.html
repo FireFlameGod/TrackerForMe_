@@ -295,7 +295,7 @@
                 <h1>Média Követő</h1>
                 <p style="font-size: 0.8em; color: #aaa; margin-top: 5px;">Azonosító: <span id="user-id-display"></span></p>
             </div>
-            <p id="auth-status" style="font-size: 0.9em; color: #ccc;">Offline</p>
+            <p id="auth-status" style="font-size: 0.9em; color: #ccc;">Online</p>
         </header>
 
         <!-- Keresés -->
@@ -353,11 +353,22 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // === GLOBÁLIS VÁLTOZÓK ÉS KONFIGURÁCIÓ MEGERŐSÍTÉSE ===
+        // === GLOBÁLIS VÁLTOZÓK ÉS KONFIGURÁCIÓ MEGERŐSÍTÉSE (JAVÍTVA) ===
         // Ellenőrizzük a globális változók elérhetőségét, amit a Canvas környezet biztosít.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // A konfigurációt JSON-ból olvassuk be, ha elérhető
-        const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
+        
+        let firebaseConfig = null;
+        try {
+            // RENDKÍVÜL ROBUSZTUS ELLENŐRZÉS a konfiguráció betöltésére
+            if (typeof __firebase_config === 'string' && __firebase_config.trim() !== '') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                console.warn('__firebase_config nem létezik, nem string, vagy üres. A konfiguráció hiányzik.');
+            }
+        } catch (e) {
+            console.error("Hiba a Firebase konfiguráció JSON feldolgozásakor (HIBÁS FORMÁTUM LEHET):", e);
+        }
+        
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db;
@@ -425,9 +436,9 @@
         // === FIREBASE MŰVELETEK ===
 
         async function initializeFirebase() {
-            // Hiányzó konfiguráció ellenőrzése
+            // HIBAKEZELÉS: Hiányzó konfiguráció ellenőrzése
             if (!firebaseConfig) {
-                const errorMsg = 'Hiányzik a Firebase konfiguráció. Kérem, frissítse a Canvas környezetet.';
+                const errorMsg = 'HIBA: Hiányzik a Firebase konfiguráció! Kérem, indítsa újra az alkalmazást, vagy ellenőrizze a környezetet.';
                 displayError(errorMsg);
                 loginMessage.textContent = errorMsg;
                 timeoutMessage.style.display = 'block';
@@ -621,7 +632,6 @@
             const saveButton = li.querySelector('button[data-action="save-media"]');
             const cancelButton = li.querySelector('button[data-action="cancel-media"]');
             const statusButton = li.querySelector('.status-toggle-button');
-            const metadataDiv = li.querySelector('.item-metadata');
             const editFieldsContainer = li.querySelector('.edit-fields-container');
             
             // Az "editing-title" osztály hozzáadása/eltávolítása váltja a módot
@@ -683,6 +693,13 @@
             const isEditing = li.classList.toggle('editing-notes');
 
             if (isEditing) {
+                // Csak akkor engedjük a jegyzet szerkesztést, ha nincs cím szerkesztés alatt
+                if (currentEditingId) {
+                    li.classList.remove('editing-notes'); // Visszaállítjuk
+                    displayError('Kérem, mentse vagy szakítsa meg az aktuális cím szerkesztését, mielőtt jegyzetet módosít.');
+                    return;
+                }
+
                 // Átalakítás textarea mezővé
                 notesDiv.innerHTML = `<textarea data-field="notes" style="min-height: 80px; margin: 0; padding: 5px; width: 100%;">${notesText}</textarea>`;
                 notesDiv.querySelector('textarea').focus();
@@ -757,7 +774,7 @@
                 const saveNotesBtnStyle = isNotesEditing ? '' : 'display: none;';
                 const cancelNotesBtnStyle = isNotesEditing ? '' : 'display: none;';
 
-                const statusButtonDisplay = isTitleEditing ? 'display: none;' : '';
+                const statusButtonDisplay = isTitleEditing || isNotesEditing ? 'display: none;' : '';
                 
                 // --- LI TARTALOM ÖSSZEÁLLÍTÁSA ---
                 li.innerHTML = `
@@ -881,7 +898,7 @@
             
             // Cím/Link/Epizód Szerkesztés / Mentés / Mégse
             if (action === 'edit-media') {
-                // Csak akkor engedjük a szerkesztést, ha nincs más szerkesztés alatt
+                // Csak akkor engedjük a szerkesztést, ha nincs jegyzet szerkesztés alatt
                 if (currentNotesEditingId) {
                     displayError('Kérem, mentse vagy szakítsa meg az aktuális jegyzet szerkesztését, mielőtt címet módosít.');
                     return;
@@ -894,7 +911,7 @@
             
             // Megjegyzés Szerkesztés / Mentés / Mégse
             } else if (action === 'edit-notes') {
-                // Csak akkor engedjük a szerkesztést, ha nincs más szerkesztés alatt
+                // Csak akkor engedjük a szerkesztést, ha nincs cím szerkesztés alatt
                 if (currentEditingId) {
                     displayError('Kérem, mentse vagy szakítsa meg az aktuális cím szerkesztését, mielőtt jegyzetet módosít.');
                     return;
