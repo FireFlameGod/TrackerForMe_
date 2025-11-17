@@ -122,10 +122,52 @@
 
 
         .tracker-list { list-style: none; padding: 0; }
-        .tracker-item { background: #444; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid var(--theme-color); display: flex; justify-content: space-between; align-items: flex-start; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); flex-wrap: wrap; }
+        .tracker-item { 
+            background: #444; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            border-left: 5px solid var(--theme-color); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; /* Fontos: borítókép magasságát megtartja */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); 
+            flex-wrap: wrap; 
+        }
         .tracker-item.watched { border-left: 5px solid #28a745; opacity: 0.8; }
         input:not([type="color"]), select { padding: 10px; border: 1px solid #555; border-radius: 6px; background-color: #3e3e3e; color: #f0f0f0; }
         
+        /* ÚJ: Borítókép és Részletek Konténer */
+        .item-content-wrapper {
+            display: flex; 
+            align-items: flex-start; 
+            gap: 15px; 
+            flex-grow: 1; 
+            min-width: 300px;
+        }
+
+        /* ÚJ: Borítókép stílusok */
+        .cover-image-container {
+            flex-shrink: 0;
+            width: 80px; 
+            height: 120px; 
+            overflow: hidden; 
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7em;
+            color: #999;
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+        }
+
         /* GOMB STÍLUSOK */
         button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s, transform 0.1s; background-color: var(--theme-color); color: #1e1e1e; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -194,7 +236,7 @@
             gap: 10px;
         }
         
-        .item-details { display: flex; flex-direction: column; margin-right: 20px; flex-grow: 1; min-width: 250px; }
+        .item-details { display: flex; flex-direction: column; margin-right: 20px; flex-grow: 1; min-width: 200px; }
         .item-title-container { 
             display: flex; 
             align-items: center; 
@@ -206,7 +248,7 @@
         .item-details a { color: var(--theme-color); text-decoration: none; font-size: 0.9em; margin-top: 3px; font-weight: 500; }
         .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        /* Címszerkesztő input stílusa, kiegészítve a link és max epizód inputokkal */
+        /* Címszerkesztő input stílusa, kiegészítve a link, max epizód és kép url inputokkal */
         .title-edit-input, .link-edit-input, .max-episode-edit-input { 
             padding: 5px; 
             font-size: 1em; 
@@ -217,6 +259,11 @@
             box-sizing: border-box;
             display: none; 
         }
+        /* Módosítva, hogy a kép URL is kapjon egy külön helyet, ha szükséges */
+        #cover-image-edit-input {
+            max-width: 350px;
+        }
+
 
         /* --- MEGJEGYZÉSEK STÍLUSAI --- */
         .notes-container {
@@ -350,6 +397,7 @@
                     </select>
                     <input type="number" id="max-epizod-input" placeholder="Max epizód" style="display: none;">
                     <input type="url" id="link-input" placeholder="Link (pl.: IMDb)">
+                    <input type="url" id="cover-image-input" placeholder="Borítókép URL (opcionális)">
                     <button onclick="addNewItem()">Hozzáadás</button>
                 </div>
                 
@@ -535,6 +583,8 @@
                 notes: doc.data().notes || '', 
                 // Biztosítjuk, hogy legyen previousCategory mező, ha hiányzik
                 previousCategory: doc.data().previousCategory || null,
+                // ÚJ: Borítókép URL alapértelmezett értéke
+                coverImageUrl: doc.data().coverImageUrl || null,
                 ...doc.data()
             }));
             renderLists(); // Frissítés az összes média fülön
@@ -561,6 +611,7 @@
         const tipus = document.getElementById('tipus-select').value;
         const maxEpizodInput = document.getElementById('max-epizod-input').value;
         const linkInput = document.getElementById('link-input').value.trim();
+        const coverImageInput = document.getElementById('cover-image-input').value.trim(); // ÚJ
         
         if (cim === "") { return; }
         
@@ -572,6 +623,7 @@
             watchedEpisodes: (tipus === 'sorozat' ? 0 : null),
             maxEpisodes: (tipus === 'sorozat' && maxEpizodInput ? parseInt(maxEpizodInput) : null),
             link: (linkInput || null),
+            coverImageUrl: (coverImageInput || null), // ÚJ MEZŐ HOZZÁADVA
             category: currentCategory, // Aktuális kategória hozzáadva
             notes: "", // Új megjegyzés mező inicializálása üres stringgel
             previousCategory: null // Új mező a visszaküldéshez
@@ -586,6 +638,7 @@
         document.getElementById('cim-input').value = '';
         document.getElementById('max-epizod-input').value = '';
         document.getElementById('link-input').value = '';
+        document.getElementById('cover-image-input').value = ''; // ÚJ: Tisztítás
     }
 
     window.deleteItem = async function(firestoreId) {
@@ -675,11 +728,13 @@
     window.saveMediaItem = async function(firestoreId) {
         const titleInput = document.getElementById(`title-edit-${firestoreId}`);
         const linkInput = document.getElementById(`link-edit-${firestoreId}`);
+        const coverImageInputEdit = document.getElementById(`cover-image-edit-${firestoreId}`); // ÚJ
         const maxEpInput = document.getElementById(`max-episode-edit-${firestoreId}`); 
         const notesTextarea = document.getElementById(`notes-edit-${firestoreId}`); 
         
         const newTitle = titleInput ? titleInput.value.trim() : null;
         const newLink = linkInput ? linkInput.value.trim() : null;
+        const newCoverImageUrl = coverImageInputEdit ? coverImageInputEdit.value.trim() : null; // ÚJ
         const newMaxEpisodes = maxEpInput ? parseInt(maxEpInput.value) : null; 
         const newNotes = notesTextarea ? notesTextarea.value : null;
 
@@ -693,6 +748,7 @@
         const updateData = {
             cim: newTitle,
             link: newLink || null, 
+            coverImageUrl: newCoverImageUrl || null, // ÚJ MEZŐ FRISSÍTÉSE
             notes: newNotes || "" 
         };
 
@@ -713,6 +769,9 @@
         } catch (e) {
             console.error("Hiba az elem frissítésekor: ", e);
         }
+        
+        // Vissza a normál nézethez
+        toggleEditMode(firestoreId); 
     }
     
     window.toggleEditMode = function(firestoreId) {
@@ -723,6 +782,9 @@
         // Link mezők
         const linkDisplay = document.getElementById(`link-display-${firestoreId}`);
         const linkInput = document.getElementById(`link-edit-${firestoreId}`);
+        
+        // ÚJ: Borítókép URL mező
+        const coverImageInputEdit = document.getElementById(`cover-image-edit-${firestoreId}`);
 
         // Max epizód mező (Csak input)
         const maxEpInput = document.getElementById(`max-episode-edit-${firestoreId}`);
@@ -753,6 +815,8 @@
             if (linkDisplay) linkDisplay.style.display = 'none'; 
             if (linkInput) linkInput.style.display = 'inline-block';
             
+            if (coverImageInputEdit) coverImageInputEdit.style.display = 'inline-block'; // ÚJ
+
             if (currentItem.tipus === 'sorozat') {
                 if (maxEpInput) maxEpInput.style.display = 'inline-block';
             }
@@ -765,6 +829,7 @@
             
             titleInput.value = currentItem.cim; 
             if (linkInput) linkInput.value = currentItem.link || ''; 
+            if (coverImageInputEdit) coverImageInputEdit.value = currentItem.coverImageUrl || ''; // ÚJ
             if (maxEpInput) maxEpInput.value = currentItem.maxEpisodes || ''; 
             
             if (sendBtn) sendBtn.style.display = 'none'; // Rejtett Send
@@ -784,6 +849,8 @@
             
             if (linkDisplay) linkDisplay.style.display = 'block'; 
             if (linkInput) linkInput.style.display = 'none';
+            
+            if (coverImageInputEdit) coverImageInputEdit.style.display = 'none'; // ÚJ
 
             if (currentItem.tipus === 'sorozat') {
                 if (maxEpInput) maxEpInput.style.display = 'none';
@@ -926,8 +993,26 @@
             const li = document.createElement('li');
             li.className = `tracker-item ${item.statusz === 'megnézve' ? 'watched' : ''}`;
             
-            // --- BAL OLDALI TARTALOM (Cím, Link, Max epizód input) ---
+            // --- FŐ KONTÉNER: Kép + Részletek + Vezérlők (Ezek a li elemek) ---
             
+            // ÚJ: Kép + Részletek konténer
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'item-content-wrapper';
+
+            // Kép konténer
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'cover-image-container';
+            
+            if (item.coverImageUrl) {
+                // Kép, hozzáadva egy hibaesetet, ha a URL nem működik (ekkor "Kép hiba" felirat jelenik meg)
+                imageContainer.innerHTML = `<img src="${item.coverImageUrl}" alt="Borítókép" class="cover-image" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20viewBox%3D%220%200%20100%20100%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23999%22%3EKép%20hiba%3C%2Ftext%3E%3C%2Fsvg%3E';">`;
+            } else {
+                imageContainer.textContent = 'Nincs kép';
+            }
+            contentWrapper.appendChild(imageContainer);
+
+
+            // --- BAL OLDALI TARTALOM (Cím, Link, Max epizód input) ---
             const itemDetails = document.createElement('div');
             itemDetails.className = 'item-details';
             
@@ -968,7 +1053,17 @@
             linkInput.style.display = 'none'; 
             linkInput.placeholder = 'Link (pl.: IMDb)';
             
-            // 3. Max Epizód Szerkesztés INPUT (Csak sorozatnál)
+            // 3. ÚJ: Borítókép URL Szerkesztés INPUT
+            const coverImageInputEdit = document.createElement('input');
+            coverImageInputEdit.type = 'url';
+            coverImageInputEdit.id = `cover-image-edit-${item.firestoreId}`;
+            coverImageInputEdit.value = item.coverImageUrl || '';
+            coverImageInputEdit.className = 'link-edit-input';
+            coverImageInputEdit.style.display = 'none'; 
+            coverImageInputEdit.placeholder = 'Borítókép URL';
+
+
+            // 4. Max Epizód Szerkesztés INPUT (Csak sorozatnál)
             if (item.tipus === 'sorozat') {
                 const maxEpInput = document.createElement('input');
                 maxEpInput.type = 'number';
@@ -989,8 +1084,12 @@
             // Link megjelenítő, utána a link szerkesztő
             itemDetails.innerHTML += linkHtmlDisplay;
             itemDetails.appendChild(linkInput);
+            
+            // Borítókép URL szerkesztő
+            itemDetails.appendChild(coverImageInputEdit);
 
-            li.appendChild(itemDetails);
+            contentWrapper.appendChild(itemDetails);
+            li.appendChild(contentWrapper); // li-hez hozzáadjuk a wrappert
 
             // --- JOBB OLDALI TARTALOM (Vezérlők) ---            
             const controls = document.createElement('div');
