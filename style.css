@@ -119,12 +119,37 @@ h1, h2, h3 { color: var(--theme-color); border-bottom: 2px solid #3d3d3d; paddin
     border-radius: 8px; 
     border-left: 5px solid var(--theme-color); 
     display: flex; 
-    justify-content: space-between; 
+    justify-content: flex-start;
     align-items: flex-start;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); 
     flex-wrap: wrap; 
 }
 .tracker-item.watched { border-left: 5px solid #28a745; opacity: 0.8; }
+
+/* ÚJ: THUMBNAIL STÍLUSOK */
+.thumbnail-container {
+    flex-shrink: 0; /* Megakadályozza, hogy a kép zsugorodjon */
+    width: 100px; /* Fix szélesség a thumbnailnek */
+    height: 150px; /* Fix magasság a thumbnailnek */
+    margin-right: 15px; 
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #333; /* Helyőrző háttér */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #555;
+    text-align: center; 
+    color: #888;
+}
+
+.thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Méretre igazítás */
+    display: block;
+}
+
 
 /* MÓDOSÍTOTT INPUT STÍLUS */
 input:not([type="color"]), select { 
@@ -133,7 +158,6 @@ input:not([type="color"]), select {
     border-radius: 6px; 
     background-color: #3e3e3e; 
     color: #f0f0f0; 
-    /* JAVÍTÁS: Ez biztosítja, hogy a padding ne növelje a 100% szélességű elemek méretét. */
     box-sizing: border-box; 
 }
 
@@ -174,7 +198,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     border-radius: 6px;
     background-color: var(--theme-color); 
     color: #1e1e1e; 
-    width: 120px; /* Fix szélesség, a Törlés gombhoz igazítva */
+    width: 120px; 
     margin-top: 5px; 
     text-align: center;
 }
@@ -187,7 +211,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .delete-button-matched { 
     background-color: #dc3545; 
     color: white; 
-    width: 120px; /* Megfelelő szélesség a title-action-btn-hez */
+    width: 120px; 
     margin-left: 10px; 
 }
 
@@ -211,7 +235,13 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     gap: 10px;
 }
 
-.item-details { display: flex; flex-direction: column; margin-right: 20px; flex-grow: 1; min-width: 200px; }
+.item-details { 
+    display: flex; 
+    flex-direction: column; 
+    margin-right: 20px; 
+    flex-grow: 1; 
+    min-width: 200px; 
+}
 .item-title-container { 
     display: flex; 
     align-items: center; 
@@ -223,8 +253,8 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .item-details a { color: var(--theme-color); text-decoration: none; font-size: 0.9em; margin-top: 3px; font-weight: 500; }
 .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-/* Címszerkesztő input stílusa, kiegészítve a link, max epizód inputokkal */
-.title-edit-input, .link-edit-input, .max-episode-edit-input { 
+/* Címszerkesztő input stílusa, kiegészítve a link, max epizód, és thumbnail inputokkal */
+.title-edit-input, .link-edit-input, .max-episode-edit-input, .thumbnail-edit-input { 
     padding: 5px; 
     font-size: 1em; 
     border-radius: 4px; 
@@ -233,6 +263,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     max-width: 250px; 
     box-sizing: border-box;
     display: none; 
+    margin-top: 5px; 
 }
 
 /* --- MEGJEGYZÉSEK STÍLUSAI --- */
