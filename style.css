@@ -1,1 +1,301 @@
+:root {
+    --theme-color: #ff8c00; 
+}
 
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; 
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; 
+    min-height: 100vh; 
+}
+
+.container {
+    width: 100%;
+    max-width: 1500px; 
+    background-color: #282828;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* --- BELÉPTETŐ KÉPERNYŐ STÍLUSOK --- */
+#login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    z-index: 1000;
+}
+
+.login-box {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+    max-width: 400px;
+    width: 90%;
+}
+.error-message { color: #dc3545; margin-top: 10px; font-weight: bold; }
+#access-key-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #555; border-radius: 6px; background-color: #444; color: #f0f0f0; font-size: 1.1em; text-align: center; }
+.login-button { width: 100%; padding: 12px; font-size: 1.1em; }
+
+
+/* --- ALKALMAZÁS STÍLUSOK --- */
+h1, h2, h3 { color: var(--theme-color); border-bottom: 2px solid #3d3d3d; padding-bottom: 5px; }
+.color-picker-area { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-weight: bold; }
+
+/* Fő és Alb Tabok stílusa */
+.tabs { margin-bottom: 10px; display: flex; flex-wrap: wrap; }
+.tabs button { 
+    background-color: #3e3e3e; 
+    color: #f0f0f0; 
+    margin-right: 5px; 
+    margin-bottom: 5px; 
+    padding: 10px 15px; 
+    border: none; 
+    cursor: pointer; 
+    transition: background-color 0.2s; 
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.main-tabs button {
+    border-radius: 8px 8px 0 0;
+    font-size: 1.1em;
+    padding: 12px 20px;
+}
+
+.main-tabs .active-main-tab { 
+    background-color: var(--theme-color); 
+    color: #1e1e1e; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sub-tabs {
+    margin-top: 10px;
+    padding-left: 20px; 
+    border-bottom: 2px solid #3e3e3e;
+    margin-bottom: 20px;
+}
+
+.sub-tabs button {
+    border-radius: 6px 6px 0 0;
+    font-size: 0.9em;
+    padding: 8px 12px;
+    background-color: #4c4c4c;
+}
+
+.sub-tabs .active-sub-tab { 
+    background-color: var(--theme-color); 
+    color: #1e1e1e;
+}
+
+.input-area { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background-color: #3e3e3e; padding: 15px; border-radius: 8px; }
+.input-area > * {
+    flex-basis: 0;
+    flex-grow: 1;
+    min-width: 150px; 
+}
+.input-area button { flex-grow: 0; flex-shrink: 0; min-width: 150px; }
+
+
+.tracker-list { list-style: none; padding: 0; }
+.tracker-item { 
+    background: #444; 
+    padding: 15px; 
+    margin-bottom: 10px; 
+    border-radius: 8px; 
+    border-left: 5px solid var(--theme-color); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); 
+    flex-wrap: wrap; 
+}
+.tracker-item.watched { border-left: 5px solid #28a745; opacity: 0.8; }
+
+/* MÓDOSÍTOTT INPUT STÍLUS */
+input:not([type="color"]), select { 
+    padding: 10px; 
+    border: 1px solid #555; 
+    border-radius: 6px; 
+    background-color: #3e3e3e; 
+    color: #f0f0f0; 
+    /* JAVÍTÁS: Ez biztosítja, hogy a padding ne növelje a 100% szélességű elemek méretét. */
+    box-sizing: border-box; 
+}
+
+/* ÚJ: Kereső mező stílusa (Most már mindkét kereső mezőre vonatkozóan) */
+#search-input, #game-search-input { 
+    width: 100%; 
+    margin-bottom: 20px;
+    padding: 12px;
+    font-size: 1.1em;
+}
+
+/* GOMB STÍLUSOK */
+button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s, transform 0.1s; background-color: var(--theme-color); color: #1e1e1e; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.logout-btn { background-color: #555; color: #f0f0f0; margin-left: 10px; }
+
+/* EPIZÓD VEZÉRLÉS STÍLUS */
+.episode-controls { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-right: 15px; 
+    flex-wrap: wrap;
+}
+.episode-controls span {
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+.episode-controls button { background-color: #555; color: #f0f0f0; padding: 5px 10px; box-shadow: none; }
+
+/* Fő szerkesztő gomb (Edit, Mentés, Mégse, Send, Back) stílusa */
+.title-action-btn { 
+    font-size: 1em; 
+    padding: 10px 15px; 
+    margin-left: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    background-color: var(--theme-color); 
+    color: #1e1e1e; 
+    width: 120px; /* Fix szélesség, a Törlés gombhoz igazítva */
+    margin-top: 5px; 
+    text-align: center;
+}
+
+/* Külön Mentés és Mégse színek, amelyek kontrasztosak */
+.save-button { background-color: #28a745; color: white; } 
+.cancel-button { background-color: #6c757d; color: white; } 
+
+/* Törlés gomb stílusa, amihez a többinek igazodnia kell */
+.delete-button-matched { 
+    background-color: #dc3545; 
+    color: white; 
+    width: 120px; /* Megfelelő szélesség a title-action-btn-hez */
+    margin-left: 10px; 
+}
+
+/* Vezérlők konténere */
+.item-controls { 
+    display: flex; 
+    align-items: center; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    margin-top: 5px;
+    flex-direction: column; 
+    align-items: flex-end; 
+    gap: 5px;
+    min-width: 170px; 
+}
+
+/* Hogy a Statusz, Törlés és Epizód vezérlő egy sorban maradjon */
+.item-controls .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.item-details { display: flex; flex-direction: column; margin-right: 20px; flex-grow: 1; min-width: 200px; }
+.item-title-container { 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+    flex-wrap: wrap;
+} 
+
+.item-details span { margin-top: 5px; font-size: 0.9em; color: #aaa; }
+.item-details a { color: var(--theme-color); text-decoration: none; font-size: 0.9em; margin-top: 3px; font-weight: 500; }
+.header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+/* Címszerkesztő input stílusa, kiegészítve a link, max epizód inputokkal */
+.title-edit-input, .link-edit-input, .max-episode-edit-input { 
+    padding: 5px; 
+    font-size: 1em; 
+    border-radius: 4px; 
+    border: 1px solid var(--theme-color); 
+    background-color: #333;
+    max-width: 250px; 
+    box-sizing: border-box;
+    display: none; 
+}
+
+/* --- MEGJEGYZÉSEK STÍLUSAI --- */
+.notes-container {
+    flex-basis: 100%; 
+    margin-top: 15px;
+    background-color: #3e3e3e;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.notes-label {
+    font-size: 0.9em;
+    color: var(--theme-color);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.notes-display-area {
+    font-size: 0.9em;
+    white-space: pre-wrap; 
+    min-height: 20px; 
+    color: #ccc;
+}
+
+.notes-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #333;
+    color: #f0f0f0;
+    font-size: 0.9em;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+/* --- HALADÓ ADATOK STÍLUSA --- */
+#advanced-info-toggle {
+    background-color: #333;
+    color: #f0f0f0;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    margin-top: 15px;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#advanced-info-content {
+    background-color: #3e3e3e;
+    padding: 10px 15px;
+    border-radius: 0 0 8px 8px;
+    border-top: 1px solid #555;
+    font-size: 0.9em;
+    color: #ccc;
+}
+#advanced-info-content p {
+    margin: 5px 0;
+}
+#advanced-info-content strong {
+    color: var(--theme-color);
+}
