@@ -325,8 +325,9 @@ window.saveMediaItem = async function(firestoreId) {
     
     try {
         await updateDoc(doc(getMediaCollectionRef(), firestoreId), updateData);
-        // Szerkesztési mód kikapcsolása MENTÉS UTÁN (ez fontos!)
-        toggleEditMode(firestoreId); 
+        // FIX: Eltávolítottam a toggleEditMode hívását.
+        // A UI-t a Firestroe onSnapshot listenere fogja frissíteni, 
+        // ami biztosítja az adatok konzisztenciáját, és megoldja a "dupla mentés" hibát.
     } catch (e) {
         console.error("Hiba az elem frissítésekor: ", e);
     }
@@ -401,9 +402,10 @@ window.toggleEditMode = function(firestoreId) {
         cancelBtn.style.display = 'block'; 
         if (deleteBtn) deleteBtn.style.display = 'none'; 
         
-        titleInput.focus();
-        const len = titleInput.value.length;
-        titleInput.setSelectionRange(len, len); 
+        // FIX: Törölve a fókuszálás, hogy ne ugorjon a képernyő
+        // titleInput.focus();
+        // const len = titleInput.value.length;
+        // titleInput.setSelectionRange(len, len); 
     } else {
         // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
         titleDisplay.style.display = 'inline-block';
@@ -880,7 +882,8 @@ function handleListClick(event) {
     }
 
     if (target.matches('[data-action="cancel-media"]')) {
-         toggleEditMode(firestoreId);
+         // A Mégse gomb továbbra is azonnal kikapcsolja a szerkesztést
+         toggleEditMode(firestoreId); 
     }
 }
 
