@@ -135,7 +135,7 @@ h1, h2, h3 { color: var(--theme-color); border-bottom: 2px solid #3d3d3d; paddin
     height: 150px; /* Miniatűr fix magassága */
     margin-right: 15px; 
     border-radius: 4px;
-    overflow: hidden; /* **FONTOS:** Elrejti a konténerből kilógó részt */
+    overflow: hidden; /* FONTOS: Elrejti a konténerből kilógó részt */
     background-color: #333; 
     display: flex;
     justify-content: center;
@@ -251,16 +251,17 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
 /* 💡 JAVÍTOTT STÍLUS: Cím, Link, Max Epizód és Bélyegkép URL mezők */
+/* EZ BIZTOSÍTJA AZ AZONOS HOSSZT ÉS A MARGÓT A MEZŐK KÖRÜL */
 .title-edit-input, .link-edit-input, .max-episode-edit-input, .thumbnail-edit-input { 
     padding: 8px; 
     font-size: 1em; 
     border-radius: 4px; 
     border: 1px solid var(--theme-color); 
     background-color: #333;
-    /* MEGOLDÁS: Korlátozza a mező maximális szélességét */
+    /* EZ TARTJA ÖSSZE A HOSSZAT: Mindkét mező maximum 350px széles lesz. */
     max-width: 350px; 
     width: 100%; 
-    /* MEGOLDÁS: Nagyobb hely felette és alatta */
+    /* EZ ADJA A HELYET FELETTE ÉS ALATTA */
     margin: 10px 0; 
     box-sizing: border-box;
     display: none; 
@@ -300,10 +301,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     color: #f0f0f0;
     font-size: 0.9em;
     box-sizing: border-box;
-    /* A resize tulajdonság itt hiányzik, ami azt jelenti, hogy az alapértelmezett (általában 'both') érvényesül. 
-       Ha kifejezetten azt akarod, hogy NE lehessen átméretezni, vedd hozzá: resize: none;
-       Jelenleg a kérésnek megfelelően csak a függőleges átméretezést tiltottam ki (azáltal, hogy eltávolítottam a 'resize: vertical'-t).
-    */
+    resize: none; 
 }
 
 /* --- HALADÓ ADATOK STÍLUSA --- */
