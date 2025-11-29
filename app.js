@@ -154,6 +154,8 @@ function startFirestoreListeners() {
     onSnapshot(getGameCollectionRef(), (snapshot) => {
         gameList = snapshot.docs.map(doc => ({
             firestoreId: doc.id,
+            // Hozzáadva: notes mező a játékokhoz is, hogy szerkeszthető legyen
+            notes: doc.data().notes || '', 
             ...doc.data()
         }));
         renderGameLists();
@@ -278,7 +280,7 @@ window.changeEpisodeCount = async function(firestoreId, delta) {
     }
 }
 
-// === CÍM, LINK, MAX EPIZÓD, THUMBNAIL ÉS MEGJEGYZÉS SZERKESZTÉSI LOGIKA ===
+// === CÍM, LINK, MAX EPIZÓD, THUMBNAIL ÉS MEGJEGYZÉS SZERKESZTÉSI LOGIKA (MÉDIA) ===
 
 window.saveMediaItem = async function(firestoreId) {
     const titleInput = document.getElementById(`title-edit-${firestoreId}`);
@@ -445,7 +447,8 @@ window.addNewGame = async function() {
     const newItem = {
         cim: cim,
         platform: platform,
-        statusz: "játszandó" 
+        statusz: "játszandó",
+        notes: "" // Inicializáljuk a notes mezőt
     };
     
     try {
@@ -474,6 +477,105 @@ window.deleteGameItem = async function(firestoreId) {
     }
 }
 
+// === CÍM, PLATFORM ÉS MEGJEGYZÉS SZERKESZTÉSI LOGIKA (JÁTÉKOKHOZ) ===
+
+window.saveGameItem = async function(firestoreId) {
+    const titleInput = document.getElementById(`game-title-edit-${firestoreId}`);
+    const platformSelect = document.getElementById(`game-platform-edit-${firestoreId}`); 
+    const notesTextarea = document.getElementById(`game-notes-edit-${firestoreId}`); 
+    
+    const newTitle = titleInput ? titleInput.value.trim() : null;
+    const newPlatform = platformSelect ? platformSelect.value : null; 
+    const newNotes = notesTextarea ? notesTextarea.value : null;
+
+    if (!firestoreId || !titleInput) { return; }
+
+    if (!newTitle || newTitle === "") { 
+        // Cím üres, visszatérünk a normál nézethez, de nem mentünk
+        toggleGameEditMode(firestoreId); 
+        return; 
+    }
+    
+    const updateData = {
+        cim: newTitle,
+        platform: newPlatform, 
+        notes: newNotes || ""
+    };
+
+    try {
+        await updateDoc(doc(getGameCollectionRef(), firestoreId), updateData);
+    } catch (e) {
+        console.error("Hiba a játék elem frissítésekor: ", e);
+    }
+}
+
+window.toggleGameEditMode = function(firestoreId) {
+    // Cím mezők
+    const titleDisplay = document.getElementById(`game-title-display-${firestoreId}`);
+    const titleInput = document.getElementById(`game-title-edit-${firestoreId}`);
+    
+    // Platform mezők
+    const platformDisplay = document.getElementById(`game-platform-display-${firestoreId}`); 
+    const platformSelect = document.getElementById(`game-platform-edit-${firestoreId}`); 
+
+    // Megjegyzés mezők
+    const notesDisplay = document.getElementById(`game-notes-display-${firestoreId}`);
+    const notesTextarea = document.getElementById(`game-notes-edit-${firestoreId}`);
+    
+    // Gombok
+    const statusBtn = document.querySelector(`#game-status-btn-${firestoreId}`); // A státusz gombot is elrejtjük
+    const deleteBtn = document.getElementById(`game-delete-btn-${firestoreId}`);
+    const editBtn = document.getElementById(`game-edit-btn-${firestoreId}`);
+    const saveBtn = document.getElementById(`game-save-btn-${firestoreId}`);
+    const cancelBtn = document.getElementById(`game-cancel-btn-${firestoreId}`);
+    
+    if (!titleDisplay || !titleInput || !editBtn || !saveBtn || !cancelBtn) { return; } 
+
+    const isEditing = titleDisplay.style.display === 'none';
+    const currentItem = gameList.find(item => item.firestoreId === firestoreId);
+
+    if (!isEditing) {
+        // Szerkesztési mód bekapcsolása
+        titleDisplay.style.display = 'none';
+        titleInput.style.display = 'inline-block';
+        titleInput.value = currentItem.cim;
+
+        if (platformDisplay) platformDisplay.style.display = 'none';
+        if (platformSelect) {
+            platformSelect.style.display = 'inline-block';
+            platformSelect.value = currentItem.platform; 
+        }
+
+        if (notesDisplay) notesDisplay.style.display = 'none';
+        if (notesTextarea) {
+            notesTextarea.style.display = 'block';
+            notesTextarea.value = currentItem.notes || ''; 
+        }
+        
+        if (statusBtn) statusBtn.style.display = 'none';
+        if (deleteBtn) deleteBtn.style.display = 'none'; 
+        editBtn.style.display = 'none'; 
+        saveBtn.style.display = 'block'; 
+        cancelBtn.style.display = 'block'; 
+        
+    } else {
+        // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
+        titleDisplay.style.display = 'inline-block';
+        titleInput.style.display = 'none';
+        
+        if (platformDisplay) platformDisplay.style.display = 'inline';
+        if (platformSelect) platformSelect.style.display = 'none';
+        
+        if (notesDisplay) notesDisplay.style.display = 'block'; 
+        if (notesTextarea) notesTextarea.style.display = 'none';
+        
+        if (statusBtn) statusBtn.style.display = 'block';
+        if (deleteBtn) deleteBtn.style.display = 'block'; 
+        editBtn.style.display = 'block'; 
+        saveBtn.style.display = 'none'; 
+        cancelBtn.style.display = 'none'; 
+    }
+}
 
 // --- Segédfüggvények ---
 
@@ -496,6 +598,7 @@ window.showMainTab = function(tabName) {
         mediaContent.style.display = 'none';
         gameContent.style.display = 'block';
         subTabs.style.display = 'none';
+        renderGameLists(); // Frissíti a játéklistát is
     }
 }
 
@@ -818,45 +921,155 @@ window.renderGameLists = function() {
         const li = document.createElement('li');
         li.className = `tracker-item ${item.statusz === 'kijátszottam' ? 'watched' : ''}`;
         
-        // JÁTÉK THUMBNAIL HELYŐRZŐ
+        // --- 1. BAL OLDAL: THUMBNAIL ---
         const thumbnailContainer = document.createElement('div');
         thumbnailContainer.className = 'thumbnail-container';
+        // JÁTÉK THUMBNAIL HELYŐRZŐ
         thumbnailContainer.innerHTML = '<span>🎮</span>';
         thumbnailContainer.style.fontSize = '3em';
         li.appendChild(thumbnailContainer); 
         
+        // --- 2. KÖZÉPSŐ: ITEM RÉSZLETEK ÉS SZERKESZTŐ INPUTOK ---
         const itemDetails = document.createElement('div');
         itemDetails.className = 'item-details';
-        itemDetails.innerHTML = `<strong>${item.cim}</strong><span>(${item.platform})</span>`;
+        
+        // A. Cím Megjelenítés és Szerkesztés (Konténer)
+        const titleContainer = document.createElement('div');
+        titleContainer.className = 'item-title-container';
+        
+        const titleDisplay = document.createElement('strong');
+        titleDisplay.id = `game-title-display-${item.firestoreId}`;
+        titleDisplay.textContent = item.cim;
+        titleDisplay.style.display = 'inline-block'; 
+        titleDisplay.style.marginRight = '5px'; 
+        
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.id = `game-title-edit-${item.firestoreId}`;
+        titleInput.value = item.cim;
+        titleInput.className = 'title-edit-input';
+        titleInput.style.display = 'none'; 
+        titleInput.onkeypress = (e) => { 
+            if(e.key === 'Enter') {
+                saveGameItem(item.firestoreId); 
+            } 
+        };
+
+        titleContainer.appendChild(titleDisplay);
+        titleContainer.appendChild(titleInput);
+        itemDetails.appendChild(titleContainer);
+        
+        // B. Platform Megjelenítés és Szerkesztés
+        const platformContainer = document.createElement('div');
+        platformContainer.className = 'platform-container';
+        
+        const platformDisplay = document.createElement('span');
+        platformDisplay.id = `game-platform-display-${item.firestoreId}`;
+        platformDisplay.textContent = `(${item.platform})`;
+        platformDisplay.style.display = 'inline';
+        platformDisplay.style.color = '#aaa';
+
+        const platformSelect = document.createElement('select');
+        platformSelect.id = `game-platform-edit-${item.firestoreId}`;
+        platformSelect.className = 'platform-edit-select';
+        platformSelect.style.display = 'none';
+        platformSelect.innerHTML = `
+            <option value="PC">PC</option>
+            <option value="PlayStation">PlayStation</option>
+            <option value="Xbox">Xbox</option>
+            <option value="Switch">Switch</option>
+            <option value="Mobil">Mobil</option>
+        `;
+        platformSelect.value = item.platform;
+
+        platformContainer.appendChild(platformDisplay);
+        platformContainer.appendChild(platformSelect);
+        itemDetails.appendChild(platformContainer);
+        
         li.appendChild(itemDetails);
         
+        // --- 3. JOBB OLDALI TARTALOM (Vezérlők) ---            
         const controls = document.createElement('div');
         controls.className = 'item-controls';
         
         const controlsRow = document.createElement('div');
         controlsRow.className = 'controls-row';
 
+        // Státusz váltó gomb
+        let statusButton;
         if (item.statusz === 'játszandó') {
-            const button = document.createElement('button');
-            button.textContent = 'Kijátszottam';
-            button.onclick = () => updateGameStatus(item.firestoreId, 'kijátszottam');
-            controlsRow.appendChild(button);
+            statusButton = document.createElement('button');
+            statusButton.textContent = 'Kijátszottam';
+            statusButton.onclick = () => updateGameStatus(item.firestoreId, 'kijátszottam');
         } else {
-            const button = document.createElement('button');
-            button.textContent = 'Mégse játszottam';
-            button.onclick = () => updateGameStatus(item.firestoreId, 'játszandó');
-            controlsRow.appendChild(button);
+            statusButton = document.createElement('button');
+            statusButton.textContent = 'Mégse játszottam';
+            statusButton.onclick = () => updateGameStatus(item.firestoreId, 'játszandó');
         }
+        statusButton.id = `game-status-btn-${item.firestoreId}`; // ID hozzáadva a toggle-höz
+        controlsRow.appendChild(statusButton);
         
+        // Törlés gomb
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Törlés 🗑️';
+        deleteBtn.id = `game-delete-btn-${item.firestoreId}`;
         deleteBtn.className = 'delete-button-matched'; 
         deleteBtn.onclick = () => deleteGameItem(item.firestoreId);
         controlsRow.appendChild(deleteBtn);
 
         controls.appendChild(controlsRow);
         
+        // Szerkesztő Gombok
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit'; 
+        editButton.id = `game-edit-btn-${item.firestoreId}`;
+        editButton.className = 'title-action-btn edit-button';
+        editButton.title = 'Adatok szerkesztése';
+        editButton.setAttribute('data-action', 'edit-game');
+        editButton.setAttribute('data-id', item.firestoreId);
+        controls.appendChild(editButton);
+
+        const saveButton = document.createElement('button');
+        saveButton.textContent = '✅ Mentés'; 
+        saveButton.id = `game-save-btn-${item.firestoreId}`;
+        saveButton.className = 'title-action-btn save-button';
+        saveButton.style.display = 'none'; 
+        saveButton.title = 'Adatok mentése';
+        saveButton.setAttribute('data-action', 'save-game'); 
+        saveButton.setAttribute('data-id', item.firestoreId);
+        controls.appendChild(saveButton); 
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = '❌ Mégse'; 
+        cancelButton.id = `game-cancel-btn-${item.firestoreId}`;
+        cancelButton.className = 'title-action-btn cancel-button';
+        cancelButton.style.display = 'none'; 
+        cancelButton.title = 'Szerkesztés megszakítása';
+        cancelButton.setAttribute('data-action', 'cancel-game'); 
+        cancelButton.setAttribute('data-id', item.firestoreId);
+        controls.appendChild(cancelButton); 
+        
         li.appendChild(controls);
+
+        // --- 4. MEGJEGYZÉSEK SZEKCIÓ ---
+        const notesContainer = document.createElement('div');
+        notesContainer.className = 'notes-container';
+        notesContainer.innerHTML = `<span class="notes-label">Megjegyzések:</span>`;
+
+        const notesDisplay = document.createElement('div');
+        notesDisplay.id = `game-notes-display-${item.firestoreId}`;
+        notesDisplay.textContent = item.notes || 'Nincs megjegyzés.';
+        notesDisplay.style.display = 'block'; 
+        notesDisplay.className = 'notes-display-area';
+        notesContainer.appendChild(notesDisplay);
+
+        const notesTextarea = document.createElement('textarea');
+        notesTextarea.id = `game-notes-edit-${item.firestoreId}`;
+        notesTextarea.className = 'notes-textarea';
+        notesTextarea.style.display = 'none';
+        notesContainer.appendChild(notesTextarea);
+        
+        li.appendChild(notesContainer);
         
         if (item.statusz === 'játszandó') {
             nezendoUl.appendChild(li);
@@ -873,6 +1086,7 @@ function handleListClick(event) {
 
     if (!firestoreId) return;
 
+    // --- MEDIA (Filmek & Sorozatok) ---
     if (target.matches('[data-action="edit-media"]')) {
         toggleEditMode(firestoreId);
     }
@@ -884,6 +1098,20 @@ function handleListClick(event) {
     if (target.matches('[data-action="cancel-media"]')) {
          // A Mégse gomb továbbra is azonnal kikapcsolja a szerkesztést
          toggleEditMode(firestoreId); 
+    }
+
+    // --- GAME (Játékok) ---
+    if (target.matches('[data-action="edit-game"]')) {
+        toggleGameEditMode(firestoreId);
+    }
+    
+    if (target.matches('[data-action="save-game"]')) {
+         saveGameItem(firestoreId);
+    }
+
+    if (target.matches('[data-action="cancel-game"]')) {
+         // A Mégse gomb továbbra is azonnal kikapcsolja a szerkesztést
+         toggleGameEditMode(firestoreId); 
     }
 }
 
