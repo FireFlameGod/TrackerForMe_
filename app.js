@@ -378,9 +378,12 @@ window.toggleEditMode = function(firestoreId) {
             thumbnailInput.style.display = 'block';
             thumbnailInput.value = currentItem.thumbnailUrl || '';
         }
-        if (thumbnailContainer) {
-            thumbnailContainer.style.display = 'none';
-        }
+        // **********************************************
+        // KIJAVÍTVA: A thumbnailContainer (kép) nem tűnik el
+        // if (thumbnailContainer) {
+        //     thumbnailContainer.style.display = 'none';
+        // }
+        // **********************************************
 
         editBtn.style.display = 'none';
         saveBtn.style.display = 'block';
@@ -408,7 +411,10 @@ window.toggleEditMode = function(firestoreId) {
         }
 
         if (thumbnailInput) thumbnailInput.style.display = 'none';
-        if (thumbnailContainer) thumbnailContainer.style.display = 'flex'; 
+        // **********************************************
+        // KIJAVÍTVA: A thumbnailContainer (kép) nem tűnik el, így nem kell visszakapcsolni
+        // if (thumbnailContainer) thumbnailContainer.style.display = 'flex'; 
+        // **********************************************
 
         editBtn.style.display = 'block';
         saveBtn.style.display = 'none';
@@ -527,10 +533,13 @@ window.toggleGameEditMode = function(firestoreId) {
             thumbnailInput.style.display = 'block';
             thumbnailInput.value = currentItem.thumbnailUrl || '';
         }
-        if (thumbnailContainer) {
-             // Elrejtjük a képet szerkesztés alatt
-             thumbnailContainer.style.display = 'none';
-        }
+        // **********************************************
+        // KIJAVÍTVA: A thumbnailContainer (kép) nem tűnik el
+        // if (thumbnailContainer) {
+        //      // Elrejtjük a képet szerkesztés alatt
+        //      thumbnailContainer.style.display = 'none';
+        // }
+        // **********************************************
         
         editBtn.style.display = 'none';
         saveBtn.style.display = 'block';
@@ -542,7 +551,10 @@ window.toggleGameEditMode = function(firestoreId) {
         titleInput.style.display = 'none';
         
         if (thumbnailInput) thumbnailInput.style.display = 'none';
-        if (thumbnailContainer) thumbnailContainer.style.display = 'flex'; 
+        // **********************************************
+        // KIJAVÍTVA: A thumbnailContainer (kép) nem tűnik el, így nem kell visszakapcsolni
+        // if (thumbnailContainer) thumbnailContainer.style.display = 'flex'; 
+        // **********************************************
         
         editBtn.style.display = 'block';
         saveBtn.style.display = 'none';
@@ -806,7 +818,7 @@ window.renderLists = function() {
         editControlsContainer.style.marginTop = '5px';
         
         const editBtn = document.createElement('button');
-        editBtn.textContent = 'Szerkesztés 📝';
+        editBtn.textContent = 'Edit'; // VÁLTOZTATVA: Eltávolítva az ikon
         editBtn.id = `edit-btn-${item.firestoreId}`;
         editBtn.className = 'title-action-btn';
         editBtn.onclick = () => toggleEditMode(item.firestoreId);
@@ -958,7 +970,7 @@ window.renderGameLists = function() {
         editControlsContainer.style.marginTop = '5px';
         
         const editBtn = document.createElement('button');
-        editBtn.textContent = 'Szerkesztés 📝';
+        editBtn.textContent = 'Edit'; // VÁLTOZTATVA: Eltávolítva az ikon
         editBtn.id = `edit-btn-game-${item.firestoreId}`;
         editBtn.className = 'title-action-btn';
         editBtn.onclick = () => window.toggleGameEditMode(item.firestoreId);
