@@ -249,7 +249,7 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 /* 💡 JAVÍTOTT STÍLUS: Cím, Link, Max Epizód és Bélyegkép URL mezők */
 /* EZ BIZTOSÍTJA AZ AZONOS HOSSZT (350px) ÉS A MARGÓT A MEZŐK KÖRÜL */
 .title-edit-input, .link-edit-input, .max-episode-edit-input, .thumbnail-edit-input { 
-    padding: 8px; 
+    padding: 5px; 
     font-size: 1em; 
     border-radius: 4px; 
     border: 1px solid var(--theme-color); 
