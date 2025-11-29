@@ -325,9 +325,7 @@ window.saveMediaItem = async function(firestoreId) {
     
     try {
         await updateDoc(doc(getMediaCollectionRef(), firestoreId), updateData);
-        // FIX: Eltávolítottam a toggleEditMode hívását.
-        // A UI-t a Firestroe onSnapshot listenere fogja frissíteni, 
-        // ami biztosítja az adatok konzisztenciáját, és megoldja a "dupla mentés" hibát.
+        // A UI-t a Firestroe onSnapshot listenere fogja frissíteni.
     } catch (e) {
         console.error("Hiba az elem frissítésekor: ", e);
     }
@@ -402,10 +400,6 @@ window.toggleEditMode = function(firestoreId) {
         cancelBtn.style.display = 'block'; 
         if (deleteBtn) deleteBtn.style.display = 'none'; 
         
-        // FIX: Törölve a fókuszálás, hogy ne ugorjon a képernyő
-        // titleInput.focus();
-        // const len = titleInput.value.length;
-        // titleInput.setSelectionRange(len, len); 
     } else {
         // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
         titleDisplay.style.display = 'inline-block';
@@ -471,6 +465,86 @@ window.deleteGameItem = async function(firestoreId) {
         await deleteDoc(doc(getGameCollectionRef(), firestoreId));
     } catch (e) {
         console.error("Hiba a játék törlésekor: ", e);
+    }
+}
+
+// ÚJ: Játék mentési funkció
+window.saveGameItem = async function(firestoreId) {
+    const titleInput = document.getElementById(`game-title-edit-${firestoreId}`);
+    const platformSelect = document.getElementById(`game-platform-select-${firestoreId}`);
+    
+    const newTitle = titleInput ? titleInput.value.trim() : null;
+    const newPlatform = platformSelect ? platformSelect.value : null;
+
+    if (!firestoreId || !newTitle || newTitle === "") { 
+        toggleGameEditMode(firestoreId); 
+        return; 
+    }
+    
+    const updateData = {
+        cim: newTitle,
+        platform: newPlatform
+    };
+    
+    try {
+        await updateDoc(doc(getGameCollectionRef(), firestoreId), updateData);
+        // A UI-t a Firestroe onSnapshot listenere fogja frissíteni.
+    } catch (e) {
+        console.error("Hiba a játék frissítésekor: ", e);
+    }
+}
+
+// ÚJ: Játék szerkesztő UI váltó funkció
+window.toggleGameEditMode = function(firestoreId) {
+    const itemElement = document.querySelector(`.tracker-item[data-id="${firestoreId}"]`);
+    if (!itemElement) return;
+
+    // Cím
+    const titleDisplay = document.getElementById(`game-title-display-${firestoreId}`);
+    const titleInput = document.getElementById(`game-title-edit-${firestoreId}`);
+    // Platform
+    const platformDisplay = document.getElementById(`game-platform-display-${firestoreId}`);
+    const platformSelect = document.getElementById(`game-platform-select-${firestoreId}`);
+    // Gombok
+    const editBtn = document.getElementById(`game-edit-btn-${firestoreId}`);
+    const saveBtn = document.getElementById(`game-save-btn-${firestoreId}`);
+    const cancelBtn = document.getElementById(`game-cancel-btn-${firestoreId}`);
+    const statusBtnContainer = document.getElementById(`game-status-controls-${firestoreId}`);
+    const deleteBtn = document.getElementById(`game-delete-btn-${firestoreId}`); 
+
+    const isEditing = titleDisplay.style.display === 'none';
+
+    if (!isEditing) {
+        // Szerkesztési mód bekapcsolása
+        titleDisplay.style.display = 'none';
+        titleInput.style.display = 'inline-block';
+        platformDisplay.style.display = 'none';
+        platformSelect.style.display = 'inline-block';
+        
+        editBtn.style.display = 'none'; 
+        saveBtn.style.display = 'block'; 
+        cancelBtn.style.display = 'block'; 
+        
+        if (statusBtnContainer) statusBtnContainer.style.display = 'none';
+        if (deleteBtn) deleteBtn.style.display = 'none'; 
+        
+        // Előre beállítjuk a platform select értékét
+        const currentPlatform = platformDisplay.textContent.replace(/[()]/g, '');
+        platformSelect.value = currentPlatform;
+
+    } else {
+        // Szerkesztési mód kikapcsolása (Mégse/Mentés után)
+        titleDisplay.style.display = 'inline-block';
+        titleInput.style.display = 'none';
+        platformDisplay.style.display = 'inline-block';
+        platformSelect.style.display = 'none';
+        
+        editBtn.style.display = 'block'; 
+        saveBtn.style.display = 'none'; 
+        cancelBtn.style.display = 'none'; 
+
+        if (statusBtnContainer) statusBtnContainer.style.display = 'block';
+        if (deleteBtn) deleteBtn.style.display = 'block'; 
     }
 }
 
@@ -817,6 +891,7 @@ window.renderGameLists = function() {
     filteredList.forEach(item => {
         const li = document.createElement('li');
         li.className = `tracker-item ${item.statusz === 'kijátszottam' ? 'watched' : ''}`;
+        li.setAttribute('data-id', item.firestoreId); // Fontos: Firestore ID hozzáadása
         
         // JÁTÉK THUMBNAIL HELYŐRZŐ
         const thumbnailContainer = document.createElement('div');
@@ -827,7 +902,59 @@ window.renderGameLists = function() {
         
         const itemDetails = document.createElement('div');
         itemDetails.className = 'item-details';
-        itemDetails.innerHTML = `<strong>${item.cim}</strong><span>(${item.platform})</span>`;
+
+        // --- CÍM MEGJELENÍTÉS ÉS SZERKESZTÉS ---
+        const titleContainer = document.createElement('div');
+        titleContainer.className = 'item-title-container';
+        
+        // Cím Display
+        const titleDisplay = document.createElement('strong');
+        titleDisplay.id = `game-title-display-${item.firestoreId}`;
+        titleDisplay.textContent = item.cim;
+        titleDisplay.style.display = 'inline-block'; 
+        titleContainer.appendChild(titleDisplay);
+        
+        // Cím Input
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.id = `game-title-edit-${item.firestoreId}`;
+        titleInput.value = item.cim;
+        titleInput.className = 'title-edit-input';
+        titleInput.style.display = 'none'; 
+        titleInput.onkeypress = (e) => { 
+            if(e.key === 'Enter') {
+                saveGameItem(item.firestoreId); 
+            } 
+        };
+        titleContainer.appendChild(titleInput);
+        
+        itemDetails.appendChild(titleContainer);
+
+        // --- PLATFORM MEGJELENÍTÉS ÉS SZERKESZTÉS ---
+
+        // Platform Display
+        const platformDisplay = document.createElement('span');
+        platformDisplay.id = `game-platform-display-${item.firestoreId}`;
+        platformDisplay.textContent = `(${item.platform})`;
+        platformDisplay.style.display = 'inline-block';
+        itemDetails.appendChild(platformDisplay);
+        
+        // Platform Select (Azonos opciókkal, mint a felül lévő)
+        const platformSelect = document.createElement('select');
+        platformSelect.id = `game-platform-select-${item.firestoreId}`;
+        platformSelect.className = 'link-edit-input'; // Újrafelhasználjuk a stílusosztályt a méret miatt
+        platformSelect.style.display = 'none';
+        platformSelect.innerHTML = `
+            <option value="PC">PC</option>
+            <option value="PlayStation">PlayStation</option>
+            <option value="Xbox">Xbox</option>
+            <option value="Switch">Switch</option>
+            <option value="Mobil">Mobil</option>
+        `;
+        // Fontos: a rendereléskor beállítjuk az aktuális értéket
+        platformSelect.value = item.platform;
+        itemDetails.appendChild(platformSelect);
+
         li.appendChild(itemDetails);
         
         const controls = document.createElement('div');
@@ -835,7 +962,9 @@ window.renderGameLists = function() {
         
         const controlsRow = document.createElement('div');
         controlsRow.className = 'controls-row';
+        controlsRow.id = `game-status-controls-${item.firestoreId}`; // A statuszvezérlők konténere
 
+        // Statusz gombok
         if (item.statusz === 'játszandó') {
             const button = document.createElement('button');
             button.textContent = 'Kijátszottam';
@@ -848,13 +977,46 @@ window.renderGameLists = function() {
             controlsRow.appendChild(button);
         }
         
+        // Törlés gomb
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Törlés 🗑️';
+        deleteBtn.id = `game-delete-btn-${item.firestoreId}`;
         deleteBtn.className = 'delete-button-matched'; 
         deleteBtn.onclick = () => deleteGameItem(item.firestoreId);
         controlsRow.appendChild(deleteBtn);
 
         controls.appendChild(controlsRow);
+        
+        // --- Edit / Save / Cancel Gombok ---
+        
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit'; 
+        editButton.id = `game-edit-btn-${item.firestoreId}`;
+        editButton.className = 'title-action-btn edit-button';
+        editButton.title = 'Adatok szerkesztése';
+        editButton.setAttribute('data-action', 'edit-game');
+        editButton.setAttribute('data-id', item.firestoreId);
+        controls.appendChild(editButton);
+
+        const saveButton = document.createElement('button');
+        saveButton.textContent = '✅ Mentés'; 
+        saveButton.id = `game-save-btn-${item.firestoreId}`;
+        saveButton.className = 'title-action-btn save-button';
+        saveButton.style.display = 'none'; 
+        saveButton.title = 'Adatok mentése';
+        saveButton.setAttribute('data-action', 'save-game'); 
+        saveButton.setAttribute('data-id', item.firestoreId);
+        controls.appendChild(saveButton); 
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = '❌ Mégse'; 
+        cancelButton.id = `game-cancel-btn-${item.firestoreId}`;
+        cancelButton.className = 'title-action-btn cancel-button';
+        cancelButton.style.display = 'none'; 
+        cancelButton.title = 'Szerkesztés megszakítása';
+        cancelButton.setAttribute('data-action', 'cancel-game'); 
+        cancelButton.setAttribute('data-id', item.firestoreId);
+        controls.appendChild(cancelButton); 
         
         li.appendChild(controls);
         
@@ -882,8 +1044,20 @@ function handleListClick(event) {
     }
 
     if (target.matches('[data-action="cancel-media"]')) {
-         // A Mégse gomb továbbra is azonnal kikapcsolja a szerkesztést
          toggleEditMode(firestoreId); 
+    }
+
+    // ÚJ JÁTÉK FUNKCIÓK
+    if (target.matches('[data-action="edit-game"]')) {
+        toggleGameEditMode(firestoreId);
+    }
+    
+    if (target.matches('[data-action="save-game"]')) {
+         saveGameItem(firestoreId);
+    }
+
+    if (target.matches('[data-action="cancel-game"]')) {
+         toggleGameEditMode(firestoreId); 
     }
 }
 
