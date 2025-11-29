@@ -129,8 +129,10 @@ h1, h2, h3 { color: var(--theme-color); border-bottom: 2px solid #3d3d3d; paddin
 /* 🖼️ KÉP ÁTMÉRETEZÉS STÍLUSOK (A nyúlás megakadályozása) */
 .thumbnail-container {
     flex-shrink: 0; 
-    width: 100px; 
-    height: 150px; 
+    /* MÓDOSÍTOTT SZÉLESSÉG */
+    width: 180px; 
+    /* MÓDOSÍTOTT MAGASSÁG */
+    height: 100px; 
     margin-right: 15px; 
     border-radius: 4px;
     overflow: hidden; 
@@ -146,10 +148,8 @@ h1, h2, h3 { color: var(--theme-color); border-bottom: 2px solid #3d3d3d; paddin
 .thumbnail-img {
     width: 100%;
     height: 100%;
-    /* MÓDOSÍTÁS: Contain biztosítja az arányos megjelenítést vágás nélkül */
     object-fit: contain; 
     display: block;
-    /* Kis padding, hogy ne tapadjon a kép a kerethez, ha van üres rész */
     padding: 5px; 
     box-sizing: border-box;
 }
