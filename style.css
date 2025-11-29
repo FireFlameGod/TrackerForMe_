@@ -129,6 +129,7 @@ h1, h2, h3 { color: var(--theme-color); border-bottom: 2px solid #3d3d3d; paddin
 /* 🖼️ KÉP ÁTMÉRETEZÉS STÍLUSOK (A nyúlás megakadályozása) */
 .thumbnail-container {
     flex-shrink: 0; 
+    /* ÚJ KOMPROMISSZUMOS MÉRET: Álló (poszter) arányhoz igazítva, de nagyobb */
     width: 120px; 
     height: 180px; 
     margin-right: 15px; 
@@ -162,10 +163,9 @@ input:not([type="color"]), select {
     box-sizing: border-box; 
 }
 
-/* 💡 JAVÍTOTT STÍLUS: Kereső mező mérete */
+/* ÚJ: Kereső mező stílusa (Most már mindkét kereső mezőre vonatkozóan) */
 #search-input, #game-search-input { 
-    width: 400px; /* Visszaállítva egy közepes méretre */
-    max-width: 100%; /* Hogy ne folyjon ki kisebb képernyőn */
+    width: 100%; 
     margin-bottom: 20px;
     padding: 12px;
     font-size: 1.1em;
@@ -195,14 +195,13 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .title-action-btn { 
     font-size: 1em; 
     padding: 10px 15px; 
-    margin: 5px 0; /* Egy kis margó a függőleges elválasztáshoz */
+    margin-left: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     border-radius: 6px;
     background-color: var(--theme-color); 
     color: #1e1e1e; 
-    /* VISSZAÁLLÍTVA: Eredetileg nem volt fix szélessége, ami rugalmassá tette */
-    /* width: 120px; ELTÁVOLÍTVA */
-    white-space: nowrap; /* Hogy ne törjön több sorba a szöveg */
+    width: 120px; 
+    margin-top: 5px; 
     text-align: center;
 }
 
@@ -214,19 +213,21 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .delete-button-matched { 
     background-color: #dc3545; 
     color: white; 
-    /* width: 120px; ELTÁVOLÍTVA */
-    margin: 5px 0;
-    white-space: nowrap;
+    width: 120px; 
+    margin-left: 10px; 
 }
 
-/* 💡 JAVÍTOTT STÍLUS: Vezérlők konténere */
+/* Vezérlők konténere */
 .item-controls { 
     display: flex; 
-    align-items: flex-end; /* A jobb oldalra igazítás megmarad */
+    align-items: center; 
     flex-wrap: wrap; 
-    gap: 5px; /* Kisebb rés a gombok között */
+    gap: 10px; 
     margin-top: 5px;
-    flex-direction: row; /* Visszaállítva sorba */
+    flex-direction: column; 
+    align-items: flex-end; 
+    gap: 5px;
+    min-width: 170px; 
 }
 
 /* Hogy a Statusz, Törlés és Epizód vezérlő egy sorban maradjon */
@@ -234,7 +235,6 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 .item-details { display: flex; flex-direction: column; margin-right: 20px; flex-grow: 1; min-width: 200px; }
@@ -250,15 +250,18 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
 /* 💡 JAVÍTOTT STÍLUS: Cím, Link, Max Epizód és Bélyegkép URL mezők */
-/* EZ BIZTOSÍTJA AZ AZONOS HOSSZT ÉS A MARGÓT A MEZŐK KÖRÜL */
+/* EZ BIZTOSÍTJA AZ AZONOS HOSSZT (350px) ÉS A MARGÓT A MEZŐK KÖRÜL */
 .title-edit-input, .link-edit-input, .max-episode-edit-input, .thumbnail-edit-input { 
     padding: 5px; 
     font-size: 1em; 
     border-radius: 4px; 
     border: 1px solid var(--theme-color); 
     background-color: #333;
+    /* MEGOLDÁS: Fix szélesség a garantált egyezésért */
     width: 350px; 
+    /* MEGOLDÁS: Hogy kisebb képernyőn ne folyjon ki */
     max-width: 100%; 
+    /* EZ ADJA A HELYET FELETTE ÉS ALATTA */
     margin: 5px 0; 
     box-sizing: border-box;
     display: none; 
